@@ -422,6 +422,14 @@ let data =
     chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000,
     """
 
+let rows = data.Split('\n')
+let secondRow = rows.[1]
+let attributes = secondRow.Split(',')
+let mpg = attributes.[1] |> Double.parse
+
+
+
+
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
@@ -501,7 +509,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
-                    [ str "SAFE Template" ] ] ]
+                    [ str "cgfjh" ] ] ]
 
           Container.container []
               [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
