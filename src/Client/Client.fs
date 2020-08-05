@@ -450,13 +450,14 @@ let init () : Model * Cmd<Msg> =
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.Counter, msg with
     | Some counter, Increment ->
-        let nextModel = { currentModel with Counter = Some { Value = counter.Value + 1 } }
-        nextModel, Cmd.none
+        
+        
+        currentModel, Cmd.none
     | Some counter, Decrement ->
-        let nextModel = { currentModel with Counter = Some { Value = counter.Value - 1 } }
-        nextModel, Cmd.none
+        
+        currentModel, Cmd.none
     | _, InitialCountLoaded initialCount->
-        let nextModel = { Counter = Some initialCount }
+        let nextModel = { Counter = Some { Value = data.Split('\n').Length } }
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
