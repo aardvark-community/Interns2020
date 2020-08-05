@@ -12,8 +12,8 @@ open Thoth.Json
 open Shared
 
 let data = 
-    """
-    Name,Miles per gallon,Cylinders,Engine displacement,Horsepower,Vehicle weight,Acceleration,Model year,Origin,
+    
+    """ Name,Miles per gallon,Cylinders,Engine displacement,Horsepower,Vehicle weight,Acceleration,Model year,Origin,
     chevrolet chevelle malibu,18.0000,8.0000,307.0000,130.0000,3504.0000,12.0000,70.0000,1.0000,
     buick skylark 320,15.0000,8.0000,350.0000,165.0000,3693.0000,11.5000,70.0000,1.0000,
     plymouth satellite,18.0000,8.0000,318.0000,150.0000,3436.0000,11.0000,70.0000,1.0000,
@@ -419,16 +419,7 @@ let data =
     vw pickup,44.0000,4.0000,97.0000,52.0000,2130.0000,24.6000,82.0000,2.0000,
     dodge rampage,32.0000,4.0000,135.0000,84.0000,2295.0000,11.6000,82.0000,1.0000,
     ford ranger,28.0000,4.0000,120.0000,79.0000,2625.0000,18.6000,82.0000,1.0000,
-    chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000,
-    """
-
-let rows = data.Split('\n')
-let secondRow = rows.[1]
-let attributes = secondRow.Split(',')
-let mpg = attributes.[1] |> Double.parse
-
-
-
+    chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000, """
 
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
@@ -439,17 +430,20 @@ type Model = { Counter: Counter option }
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
 type Msg =
-    | Increment
+    | LoadCsv
     | Decrement
     | InitialCountLoaded of Counter
 
 let initialCounter () = Fetch.fetchAs<unit, Counter> "/api/init"
+
+open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
     let initialModel = { Counter = None }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
+
     initialModel, loadCountCmd
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
@@ -457,8 +451,18 @@ let init () : Model * Cmd<Msg> =
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.Counter, msg with
-    | Some counter, Increment ->
-        
+    | Some counter, LoadCsv ->
+        let rows = data.Split('\n')
+
+        let headers = rows.[0]
+        printfn "headers: %A" headers
+
+        let secondRow = rows.[1]
+        let attributes = secondRow.Split(',')
+
+        let mpg = attributes.[1] |> Double.Parse
+
+        printfn "name: %A; mpg: %A " attributes.[0] mpg
         
         currentModel, Cmd.none
     | Some counter, Decrement ->
@@ -516,7 +520,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
-                      Column.column [] [ button "+" (fun _ -> dispatch Increment) ] ] ]
+                      Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ] ]
 
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
