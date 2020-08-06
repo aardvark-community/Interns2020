@@ -11,6 +11,8 @@ open Thoth.Json
 
 open Shared
 
+
+
 let data = 
     
     """ Name,Miles per gallon,Cylinders,Engine displacement,Horsepower,Vehicle weight,Acceleration,Model year,Origin,
@@ -421,11 +423,26 @@ let data =
     ford ranger,28.0000,4.0000,120.0000,79.0000,2625.0000,18.6000,82.0000,1.0000,
     chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000, """
 
+type Car = {
+    name : string
+    mpg : float
+    cylinders : float
+    engineDisplacement : float
+    horsepower : float // int
+    weight : float
+    acceleration : float
+    modelYear : float // int
+    origin : float
+}
+
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
-type Model = { Counter: Counter option }
+type Model = {
+        Counter: Counter option
+        cars: list<Car>
+    }
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
@@ -440,7 +457,12 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Counter = None }
+    let initialModel =
+        {
+            Counter = None
+            cars = []
+        }
+
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -457,14 +479,53 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         let headers = rows.[0]
         printfn "headers: %A" headers
 
-        let secondRow = rows.[1]
-        let attributes = secondRow.Split(',')
+        let parseCar (row : string) : Car =
 
-        let mpg = attributes.[1] |> Double.Parse
+            let attr = secondRow.Split(',')
+            
+            let output = {
+                name = attr.[0]
+                mpg = attr.[1] |> Double.Parse
+                cylinders = attr.[2] |> Double.Parse
+                engineDisplacement = attr.[3] |> Double.Parse
+                horsepower = attr.[4] |> Double.Parse // int
+                weight = attr.[5] |> Double.Parse
+                acceleration = attr.[6] |> Double.Parse
+                modelYear = attr.[7] |> Double.Parse // int
+                origin = attr.[8] |> Double.Parse
+            }
 
-        printfn "name: %A; mpg: %A " attributes.[0] mpg
-        
-        currentModel, Cmd.none
+            output
+
+        let cars =
+            rows
+            |> Array.skip 1
+            |> Array.map (fun row -> parseCar row)
+
+        let test =
+            match rows |> Array.toList with
+            |[] -> None
+            |h::t -> Some (h,t)
+
+        let cars2 =
+            test
+            |> Option.map (fun (h,t) ->
+                printfn "header: %A \n count: %i" h (h.Split(',') |> Array.length)
+                t |> List.map (fun row -> parseCar row)
+            )
+            //|> Option.defaultValue List.empty
+
+        let final =
+            match cars2 with
+            |None ->
+                Console.WriteLine "ERROR"
+                currentModel, Cmd.none
+            |Some newCars ->
+                Console.WriteLine "Yeahhh"
+                { currentModel with cars = newCars } , Cmd.none
+
+        final
+        //currentModel, Cmd.none
     | Some counter, Decrement ->
         
         currentModel, Cmd.none
