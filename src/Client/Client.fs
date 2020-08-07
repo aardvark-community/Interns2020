@@ -11,6 +11,8 @@ open Thoth.Json
 
 open Shared
 
+
+
 let data = 
     
     """ Name,Miles per gallon,Cylinders,Engine displacement,Horsepower,Vehicle weight,Acceleration,Model year,Origin,
@@ -421,11 +423,27 @@ let data =
     ford ranger,28.0000,4.0000,120.0000,79.0000,2625.0000,18.6000,82.0000,1.0000,
     chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000, """
 
+type Car = {
+    name : string
+    mpg : float
+    cylinders : float
+    engineDisplacement : float
+    horsepower : float //int
+    weight : float
+    acceleration : float
+    modelYear : float //int
+    origin : float
+}
+
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
-type Model = { Counter: Counter option }
+type Model =
+    {
+        counter: Counter option
+        cars : Car[]
+    }
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
@@ -452,19 +470,37 @@ let init () : Model * Cmd<Msg> =
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.Counter, msg with
     | Some counter, LoadCsv ->
-        let rows = data.Split('\n')
+        let rows = data.Split('\n') |> Array.toList
 
-        let headers = rows.[0]
-        printfn "headers: %A" headers
-
-        let secondRow = rows.[1]
-        let attributes = secondRow.Split(',')
-
-        let mpg = attributes.[1] |> Double.Parse
-
-        printfn "name: %A; mpg: %A " attributes.[0] mpg
         
-        currentModel, Cmd.none
+
+        let parseRow (row : string) : Car =
+            let attr = row.Split(',')
+
+            let output = {
+                name = attr.[0]
+                mpg = attr.[1] |> Double.parse
+                cylinders = attr.[2] |> Double.parse
+                engineDisplacement = attr.[3] |> Double.parse
+                horsepower = attr.[4] |> Double.parse //int
+                weight = attr.[5] |> Double.parse
+                acceleration = attr.[6] |> Double.parse
+                modelYear = attr.[7] |> Double.parse //int
+                origin = attr.[8] |> Double.parse
+            }
+
+            output
+
+        
+        match rows with
+        |[] -> currentModel, Cmd.none
+        |h::t ->
+            let test = t |> List.map (fun row -> parseRow row)
+           
+            {currentModel with cars = test}, Cmd.none
+
+        
+
     | Some counter, Decrement ->
         
         currentModel, Cmd.none
