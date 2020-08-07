@@ -558,11 +558,18 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ str "cgfjh" ] ] ]
 
           Container.container []
-              [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
+            [
+                Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
-                      Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ] ]
+                      Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
+
+                ul [] [
+                    li [] [str "a"]
+                    li [] [str "b"]
+                ]
+            ]
 
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
