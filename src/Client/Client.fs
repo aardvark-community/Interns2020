@@ -441,8 +441,8 @@ type Car = {
 // the initial value will be requested from server
 type Model =
     {
-        counter: Counter option
-        cars : Car[]
+        counter : option<Counter>
+        cars    : list<Car>
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -458,54 +458,60 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Counter = None }
+    let initialModel = { counter = None; cars = [] }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
     initialModel, loadCountCmd
 
+let tryParse d = 
+    match d with
+    | "" -> nan
+    | _ ->
+        d |> Double.Parse
+
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
-    match currentModel.Counter, msg with
+    match currentModel.counter, msg with
     | Some counter, LoadCsv ->
         let rows = data.Split('\n') |> Array.toList
 
+        printfn "loading csv"
         
-
         let parseRow (row : string) : Car =
             let attr = row.Split(',')
 
             let output = {
-                name = attr.[0]
-                mpg = attr.[1] |> Double.parse
-                cylinders = attr.[2] |> Double.parse
-                engineDisplacement = attr.[3] |> Double.parse
-                horsepower = attr.[4] |> Double.parse //int
-                weight = attr.[5] |> Double.parse
-                acceleration = attr.[6] |> Double.parse
-                modelYear = attr.[7] |> Double.parse //int
-                origin = attr.[8] |> Double.parse
+                name               = attr.[0]
+                mpg                = attr.[1] |> tryParse
+                cylinders          = attr.[2] |> tryParse
+                engineDisplacement = attr.[3] |> tryParse
+                horsepower         = attr.[4] |> tryParse //int
+                weight             = attr.[5] |> tryParse
+                acceleration       = attr.[6] |> tryParse
+                modelYear          = attr.[7] |> tryParse //int
+                origin             = attr.[8] |> tryParse
             }
 
             output
-
         
         match rows with
-        |[] -> currentModel, Cmd.none
-        |h::t ->
+        | [] ->
+            printfn "%d" currentModel.cars.Length
+            currentModel, Cmd.none
+        | h::t ->
+            printfn "%A" h
+            printfn "%d" currentModel.cars.Length
             let test = t |> List.map (fun row -> parseRow row)
-           
-            {currentModel with cars = test}, Cmd.none
-
+            let m = {currentModel with cars = test}
+            m, Cmd.none
         
-
-    | Some counter, Decrement ->
-        
+    | Some counter, Decrement ->        
         currentModel, Cmd.none
-    | _, InitialCountLoaded initialCount->
-        let nextModel = { Counter = Some { Value = data.Split('\n').Length } }
+    | _, InitialCountLoaded _ ->
+        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = [] }
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
@@ -534,8 +540,8 @@ let safeComponents =
           components ]
 
 let show = function
-    | { Counter = Some counter } -> string counter.Value
-    | { Counter = None   } -> "Loading..."
+    | { counter = Some counter } -> string counter.Value
+    | { counter = None   } -> "Loading..."
 
 let button txt onClick =
     Button.button
