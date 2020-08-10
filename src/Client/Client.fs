@@ -10,7 +10,7 @@ open Fulma
 open Thoth.Json
 
 open Shared
-
+open System
 
 
 let data = 
@@ -564,11 +564,18 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
+                
+                let carNames =
+                    model.cars
+                     //|> List.filter (fun c -> c.name.StartsWith("a"))
+                     |> List.sortBy (fun car -> car.name)
+                     |> List.map (fun car -> li[][str car.name])
 
+                let carmpg =
+                    model.cars
+                    |> List.map (fun car -> li[][ car.mpg])
                 
-                let carNames = model.cars |> List.map (fun car -> li[][str car.name])
-                
-                ul [] carNames
+                ul [] carmpg
 
             ]
 
