@@ -565,15 +565,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
 
-                ul [] [
-                    li [] [str "a"]
-                    li [] [str "b"]
-                ]
+                
+                let carNames = model.cars |> List.map (fun car -> li[][str car.name])
+                
+                ul [] carNames
+
             ]
 
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                    [ safeComponents ] ] ]
+                    [ safeComponents ] ]
+         ]
 
 #if DEBUG
 open Elmish.Debug
