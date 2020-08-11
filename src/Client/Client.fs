@@ -13,8 +13,8 @@ open Shared
 open System
 
 
-let data = 
-    
+let data =
+
     """ Name,Miles per gallon,Cylinders,Engine displacement,Horsepower,Vehicle weight,Acceleration,Model year,Origin,
     chevrolet chevelle malibu,18.0000,8.0000,307.0000,130.0000,3504.0000,12.0000,70.0000,1.0000,
     buick skylark 320,15.0000,8.0000,350.0000,165.0000,3693.0000,11.5000,70.0000,1.0000,
@@ -423,6 +423,7 @@ let data =
     ford ranger,28.0000,4.0000,120.0000,79.0000,2625.0000,18.6000,82.0000,1.0000,
     chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000, """
 
+
 type Car = {
     name : string
     mpg : float
@@ -443,6 +444,7 @@ type Model =
     {
         counter : option<Counter>
         cars    : list<Car>
+        attributes : list<String>
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -458,13 +460,13 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { counter = None; cars = [] }
+    let initialModel = { counter = None; cars = []; attributes = []; }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
     initialModel, loadCountCmd
 
-let tryParse d = 
+let tryParse d =
     match d with
     | "" -> nan
     | _ ->
@@ -479,7 +481,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         let rows = data.Split('\n') |> Array.toList
 
         printfn "loading csv"
-        
+
         let parseRow (row : string) : Car =
             let attr = row.Split(',')
 
@@ -496,22 +498,22 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
 
             output
-        
+
         match rows with
         | [] ->
             printfn "%d" currentModel.cars.Length
             currentModel, Cmd.none
         | h::t ->
-            printfn "%A" h
+            let head = h.Split(',') |> Array.toList
             printfn "%d" currentModel.cars.Length
-            let test = t |> List.map (fun row -> parseRow row)
-            let m = {currentModel with cars = test}
+            let cars = t |> List.map (fun row -> parseRow row)
+            let m = {currentModel with cars = cars; attributes = head}
             m, Cmd.none
-        
-    | Some counter, Decrement ->        
+
+    | Some counter, Decrement ->
         currentModel, Cmd.none
     | _, InitialCountLoaded _ ->
-        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = [] }
+        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = []; attributes =[]; }
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
@@ -551,6 +553,7 @@ let button txt onClick =
         [ str txt ]
 
 let view (model : Model) (dispatch : Msg -> unit) =
+
     div []
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
@@ -564,18 +567,25 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
-                
+
                 let carNames =
                     model.cars
                      //|> List.filter (fun c -> c.name.StartsWith("a"))
                      |> List.sortBy (fun car -> car.name)
                      |> List.map (fun car -> li[][str car.name])
 
-                let carmpg =
-                    model.cars
-                    |> List.map (fun car -> li[][ car.mpg])
-                
-                ul [] carmpg
+                let asdf =
+                    model.attributes
+                    |> List.map (fun k -> th[][str k])
+
+                table [] [
+                   tr [] asdf
+                ]
+
+
+
+
+                ul [] carNames
 
             ]
 
