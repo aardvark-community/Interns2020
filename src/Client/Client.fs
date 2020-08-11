@@ -574,12 +574,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                      |> List.sortBy (fun car -> car.name)
                      |> List.map (fun car -> li[][str car.name])
 
-                let asdf =
+                let header =
                     model.attributes
-                    |> List.map (fun k -> th[][str k])
+                    |> List.map (fun k -> th[][str k "\t"])
 
                 table [] [
-                   tr [] asdf
+                   tr [] header
                 ]
 
 
