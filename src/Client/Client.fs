@@ -576,10 +576,15 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let header =
                     model.attributes
-                    |> List.map (fun k -> th[][str k "\t"])
+                    |> List.map (fun k -> th[][str k])
+
+                
 
                 table [] [
-                   tr [] header
+                    thead [] header
+                    tbody [] [str "test"]
+                  
+                    
                 ]
 
 
