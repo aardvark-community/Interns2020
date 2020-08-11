@@ -558,7 +558,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
-                    [ str "cgfjh" ] ] ]
+                    [ str "xrgdb" ] ] ]
 
           Container.container []
             [
@@ -578,19 +578,48 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.attributes
                     |> List.map (fun k -> th[][str k])
 
-                
+                let cars =
+                    model.cars
+                    |> List.map (fun car -> 
+                        [
+                            car.name
+                            string car.mpg
+                            string car.cylinders
+                            string car.engineDisplacement
+                            string car.horsepower
+                            string car.weight
+                            string car.acceleration
+                            string car.modelYear
+                            string car.origin
+                        ]
+                    )
+
+                let carToRow i (c : list<string>) : ReactElement =
+                    let tds = 
+                        c |> List.map (fun x -> td[][str x])
+
+                        
+
+                    tr [ if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]] tds
+
+                let tableRows =
+                    cars
+                    |> List.mapi (fun i c -> carToRow i c )
+
+
+                    
 
                 table [] [
-                    thead [] header
-                    tbody [] [str "test"]
-                  
-                    
+                    thead [] [
+                        tr [] header
+                    ]
+                    tbody [ ] tableRows
                 ]
 
 
 
 
-                ul [] carNames
+                //ul [] carNames
 
             ]
 
