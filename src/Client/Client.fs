@@ -558,7 +558,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
-                    [ str "xrgdb" ] ] ]
+                    [ str "Melihs und Sofies Daten-Visualiser!" ] ] ]
 
           Container.container []
             [
@@ -576,7 +576,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let header =
                     model.attributes
-                    |> List.map (fun k -> th[][str k])
+                    |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
 
                 let cars =
                     model.cars
@@ -596,7 +596,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let carToRow i (c : list<string>) : ReactElement =
                     let tds = 
-                        c |> List.map (fun x -> td[][str x])
+                        c |> List.map (fun x -> td[Style [Padding "10px"]][str x])
 
                         
 
