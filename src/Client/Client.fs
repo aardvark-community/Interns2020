@@ -573,10 +573,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let changeOrigin (origin : String) : String =
                     match origin with
                     |"" -> ""
-                    |"1.0000" -> "Amerika"
-                    |"2.0000" -> "Europa"
-                    |"3.0000" -> "Asien"
-                    |"4.0000" -> "Afrika"
+                    |"1.0000" -> "USA"
+                    |"2.0000" -> "Europe"
+                    |"3.0000" -> "Asia"
 
                 let ivalid (car : Car) : bool =
                     not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN || car.origin = "")
@@ -607,7 +606,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             string car.weight
                             string car.acceleration
                             string car.modelYear
-                            string car.origin
+                            changeOrigin car.origin
                         ]
                     )
 
