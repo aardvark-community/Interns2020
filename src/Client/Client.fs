@@ -469,8 +469,9 @@ let init () : Model * Cmd<Msg> =
 let tryParse d =
     match d with
     | "" -> nan
-    | _ ->
+    |  _ ->
         d |> Double.Parse
+
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -505,8 +506,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             currentModel, Cmd.none
         | h::t ->
             let head = h.Split(',') |> Array.toList
-            printfn "%d" currentModel.cars.Length
-            let cars = t |> List.map (fun row -> parseRow row)
+            //printfn "%d" currentModel.cars.Length
+            let cars = t |> List.map (parseRow)
+            //funktion
             let m = {currentModel with cars = cars; attributes = head}
             m, Cmd.none
 
@@ -568,8 +570,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
 
+                let ivalid (car : Car) : bool =
+                    car.name <> "" && car.mpg <> nan && car.cylinders <> nan  && car.engineDisplacement <> nan  && car.horsepower <> nan  && car.weight <> nan  && car.acceleration <> nan  && car.modelYear <> nan
+
+                let nmcars = model.cars |> List.filter(ivalid)
+
                 let carNames =
-                    model.cars
+                    nmcars
                      //|> List.filter (fun c -> c.name.StartsWith("a"))
                      |> List.sortBy (fun car -> car.name)
                      |> List.map (fun car -> li[][str car.name])
@@ -579,8 +586,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
 
                 let cars =
-                    model.cars
-                    |> List.map (fun car -> 
+                    nmcars
+                    |> List.map (fun car ->
                         [
                             car.name
                             string car.mpg
@@ -594,11 +601,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         ]
                     )
 
+
+
                 let carToRow i (c : list<string>) : ReactElement =
-                    let tds = 
+                    let tds =
                         c |> List.map (fun x -> td[Style [Padding "10px"]][str x])
 
-                        
+
 
                     tr [ if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]] tds
 
@@ -607,7 +616,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |> List.mapi (fun i c -> carToRow i c )
 
 
-                    
+
 
                 table [] [
                     thead [] [
