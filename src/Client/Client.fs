@@ -433,7 +433,7 @@ type Car = {
     weight : float
     acceleration : float
     modelYear : float //int
-    origin : float
+    origin : string
 }
 
 // The model holds data that you want to keep track of while the application is running
@@ -495,7 +495,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 weight             = attr.[5] |> tryParse
                 acceleration       = attr.[6] |> tryParse
                 modelYear          = attr.[7] |> tryParse //int
-                origin             = attr.[8] |> tryParse
+                origin             = attr.[8]
             }
 
             output
@@ -570,10 +570,20 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
 
-                let ivalid (car : Car) : bool =
-                    not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN)
+                let changeOrigin (origin : String) : String =
+                    match origin with
+                    |"" -> ""
+                    |"1.0000" -> "Amerika"
+                    |"2.0000" -> "Europa"
+                    |"3.0000" -> "Asien"
+                    |"4.0000" -> "Afrika"
 
-                let nmcars = model.cars |> List.filter(ivalid)
+                let ivalid (car : Car) : bool =
+                    not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN || car.origin = "")
+
+                let nmcars =
+                    model.cars
+                    |> List.filter(ivalid)
 
                 let carNames =
                     nmcars
@@ -613,7 +623,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let tableRows =
                     cars
-                    |> List.mapi (fun i c -> carToRow i c )
+                    |> List.mapi (carToRow)
 
 
 
