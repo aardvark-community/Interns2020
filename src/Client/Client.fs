@@ -571,7 +571,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
 
                 let ivalid (car : Car) : bool =
-                    car.name <> "" && car.mpg <> nan && car.cylinders <> nan  && car.engineDisplacement <> nan  && car.horsepower <> nan  && car.weight <> nan  && car.acceleration <> nan  && car.modelYear <> nan
+                    not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN)
 
                 let nmcars = model.cars |> List.filter(ivalid)
 
