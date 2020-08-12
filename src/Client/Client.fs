@@ -445,6 +445,7 @@ type Model =
         counter : option<Counter>
         cars    : list<Car>
         attributes : list<String>
+        footer : list<float>
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -460,7 +461,7 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { counter = None; cars = []; attributes = []; }
+    let initialModel = { counter = None; cars = []; attributes = []; footer = []}
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -500,6 +501,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             output
 
+        
+
         match rows with
         | [] ->
             printfn "%d" currentModel.cars.Length
@@ -508,14 +511,59 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let head = h.Split(',') |> Array.toList
             //printfn "%d" currentModel.cars.Length
             let cars = t |> List.map (parseRow)
-            //funktion
-            let m = {currentModel with cars = cars; attributes = head}
+
+            let ivalid (car : Car) : bool =
+                not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN || car.origin = "")
+
+            let newCars =
+                cars
+                |> List.filter(ivalid)
+
+            let carMpg = 
+                newCars
+                |> List.map (fun car -> car.mpg)
+
+            let carCyl = 
+                newCars
+                |> List.map (fun car -> car.cylinders)
+
+            let carEng = 
+                newCars
+                |> List.map (fun car -> car.engineDisplacement)
+
+            let carHp = 
+                newCars
+                |> List.map (fun car -> car.horsepower)
+
+            let carVw = 
+                newCars
+                |> List.map (fun car -> car.weight)
+
+            let carAcc = 
+                newCars
+                |> List.map (fun car -> car.acceleration)
+
+            let carMy = 
+                newCars
+                |> List.map (fun car -> car.modelYear)
+
+            let numOfCars =
+                newCars 
+                |> List.length
+
+            let avg (input : list<float>) : float =
+                input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
+                
+            let foot = [avg carMpg; avg carCyl; avg carEng; avg carHp; avg carVw; avg carAcc; avg carMy]               
+
+
+            let m = {currentModel with cars = newCars; attributes = head; footer = foot}
             m, Cmd.none
 
     | Some counter, Decrement ->
         currentModel, Cmd.none
     | _, InitialCountLoaded _ ->
-        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = []; attributes =[]; }
+        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = []; attributes = []; footer = []}
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
@@ -577,25 +625,27 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |"2.0000" -> "Europe"
                     |"3.0000" -> "Asia"
 
-                let ivalid (car : Car) : bool =
-                    not (car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN || car.origin = "")
-
-                let nmcars =
-                    model.cars
-                    |> List.filter(ivalid)
+                
 
                 let carNames =
-                    nmcars
+                    model.cars
                      //|> List.filter (fun c -> c.name.StartsWith("a"))
                      |> List.sortBy (fun car -> car.name)
                      |> List.map (fun car -> li[][str car.name])
+
+                let footer =
+                    model.footer
+                    |> List.map (string) 
+                    |> List.map (fun x -> td[Style [Padding "10px"; Color "#585858"]][str x])          
 
                 let header =
                     model.attributes
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
 
+                
+
                 let cars =
-                    nmcars
+                    model.cars
                     |> List.map (fun car ->
                         [
                             car.name
@@ -632,6 +682,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         tr [] header
                     ]
                     tbody [ ] tableRows
+                    tfoot [] [
+                        tr [] footer
+                    ]
                 ]
 
 
