@@ -669,14 +669,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
 
                 let carToUl (l : list<Car>) : ReactElement =
-                    let l2 = l |> List.map (fun car -> li [] [car |> string |> str])
-                    ul [] l2
+                    let l2 = l |> List.map (fun car -> li [] [str car.name])
+                    td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
 
                 let cars2 =
                     model.groupedCars
                     |> List.map (carToUl)
                     
-                ul [] cars2
+
 
                 let cars =
                     model.cars
@@ -725,6 +725,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 table [] [
                     thead [] [
                         tr [] header2
+                    ]
+                    tbody [] [
+                        tr [] cars2
                     ]
                     
                 ]
