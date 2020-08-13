@@ -445,7 +445,7 @@ type Model =
         counter : option<Counter>
         cars    : list<Car>
         attributes : list<String>
-        footer : list<float>
+        footer : list<string>
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -554,7 +554,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let avg (input : list<float>) : float =
                 input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
                 
-            let foot = [avg carMpg; avg carCyl; avg carEng; avg carHp; avg carVw; avg carAcc; avg carMy]               
+            let foot = ["Average:"; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); "USA"]               
 
 
             let m = {currentModel with cars = newCars; attributes = head; footer = foot}
@@ -624,6 +624,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |"1.0000" -> "USA"
                     |"2.0000" -> "Europe"
                     |"3.0000" -> "Asia"
+                    | _ -> "Other"
 
                 
 
@@ -634,9 +635,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                      |> List.map (fun car -> li[][str car.name])
 
                 let footer =
-                    model.footer
-                    |> List.map (string) 
-                    |> List.map (fun x -> td[Style [Padding "10px"; Color "#585858"]][str x])          
+                    model.footer 
+                    |> List.map (fun x -> td[Style [Padding "10px"; BackgroundColor "#888888"; Color "#ffffff"]][x |> str])
+
 
                 let header =
                     model.attributes
