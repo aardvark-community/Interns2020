@@ -481,21 +481,22 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
         let parseCar (row : string) : Car =
 
-            let attr = secondRow.Split(',')
+            //let attr = secondRow.Split(',')
             
-            let output = {
-                name = attr.[0]
-                mpg = attr.[1] |> Double.Parse
-                cylinders = attr.[2] |> Double.Parse
-                engineDisplacement = attr.[3] |> Double.Parse
-                horsepower = attr.[4] |> Double.Parse // int
-                weight = attr.[5] |> Double.Parse
-                acceleration = attr.[6] |> Double.Parse
-                modelYear = attr.[7] |> Double.Parse // int
-                origin = attr.[8] |> Double.Parse
-            }
+            //let output = {
+            //    name = attr.[0]
+            //    mpg = attr.[1] |> Double.Parse
+            //    cylinders = attr.[2] |> Double.Parse
+            //    engineDisplacement = attr.[3] |> Double.Parse
+            //    horsepower = attr.[4] |> Double.Parse // int
+            //    weight = attr.[5] |> Double.Parse
+            //    acceleration = attr.[6] |> Double.Parse
+            //    modelYear = attr.[7] |> Double.Parse // int
+            //    origin = attr.[8] |> Double.Parse
+            //}
 
-            output
+            //output
+            failwith ""
 
         let cars =
             rows
@@ -530,8 +531,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         
         currentModel, Cmd.none
     | _, InitialCountLoaded initialCount->
-        let nextModel = { Counter = Some { Value = data.Split('\n').Length } }
-        nextModel, Cmd.none
+        //let nextModel = { Counter = Some { Value = data.Split('\n').Length } }
+        //nextModel, Cmd.none
+        currentModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
 
@@ -569,12 +571,26 @@ let button txt onClick =
           Button.OnClick onClick ]
         [ str txt ]
 
+
+//        <svg width="100" height="100">
+//        <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+//</svg>
+
 let view (model : Model) (dispatch : Msg -> unit) =
     div []
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
                     [ str "cgfjh" ] ] ]
+
+          let height = 700
+          let cy = 50
+
+          Container.container [] [
+            svg [SVGAttr.Width "1080px"; SVGAttr.Height height] [
+                circle [Cx "50"; Cy (700-50); R "40"; SVGAttr.Stroke "green"; SVGAttr.StrokeWidth "4"; SVGAttr.Fill "yellow"][]
+            ]
+          ]
 
           Container.container []
               [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
