@@ -443,7 +443,7 @@ type Car = {
 // the initial value will be requested from server
 type Model =
     {
-        counter     : option<Counter>
+        rawData      : option<string>
         cars        : list<Car>
         attributes  : list<String>
         footer      : list<String>
@@ -456,15 +456,15 @@ type Model =
 type Msg =
     | LoadCsv
     | Decrement
-    | InitialCountLoaded of Counter
+    | InitialCountLoaded of string
 
-let initialCounter () = Fetch.fetchAs<unit, Counter> "/api/init"
+let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
 open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { counter = None; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
+    let initialModel = { rawData = None; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -473,16 +473,15 @@ let init () : Model * Cmd<Msg> =
 let tryParse d =
     match d with
     | "" -> nan
-    |  _ ->
-        d |> Double.Parse
+    |  _ -> d |> Double.Parse
 
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
-    match currentModel.counter, msg with
-    | Some counter, LoadCsv ->
+    match currentModel.rawData, msg with
+    | Some data, LoadCsv ->
         let rows = data.Split('\n') |> Array.toList
 
         printfn "loading csv"
@@ -491,15 +490,15 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let attr = row.Split(',')
 
             let carName = attr.[0].Trim()
-            
+
             let index = carName.IndexOf(' ')
 
             let brand = carName.Substring(0, index)
 
             let name = carName.Substring(index)
-            
+
             let output = {
-                brand              = brand               
+                brand              = brand
                 name               = name
                 mpg                = attr.[1] |> tryParse
                 cylinders          = attr.[2] |> tryParse
@@ -513,7 +512,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             output
 
-        
+
 
         match rows with
         | [] ->
@@ -524,7 +523,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let newHead = "Brand" :: head
             //printfn "%d" currentModel.cars.Length
             let cars = t |> List.map (parseRow)
-            
+
             printfn "%A" cars
 
             let ivalid (car : Car) : bool =
@@ -542,42 +541,42 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let groupedCars =
                 gCars |> List.map (snd)
 
-            let carMpg = 
+            let carMpg =
                 newCars
                 |> List.map (fun car -> car.mpg)
 
-            let carCyl = 
+            let carCyl =
                 newCars
                 |> List.map (fun car -> car.cylinders)
 
-            let carEng = 
+            let carEng =
                 newCars
                 |> List.map (fun car -> car.engineDisplacement)
 
-            let carHp = 
+            let carHp =
                 newCars
                 |> List.map (fun car -> car.horsepower)
 
-            let carVw = 
+            let carVw =
                 newCars
                 |> List.map (fun car -> car.weight)
 
-            let carAcc = 
+            let carAcc =
                 newCars
                 |> List.map (fun car -> car.acceleration)
 
-            let carMy = 
+            let carMy =
                 newCars
                 |> List.map (fun car -> car.modelYear)
 
             let numOfCars =
-                newCars 
+                newCars
                 |> List.length
 
             let avg (input : list<float>) : float =
                 input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
-                
-            let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]               
+
+            let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
             let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars}
@@ -585,8 +584,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
     | Some counter, Decrement ->
         currentModel, Cmd.none
-    | _, InitialCountLoaded _ ->
-        let nextModel = { counter = Some { Value = data.Split('\n').Length }; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
+    | _, InitialCountLoaded data ->
+        let nextModel = { rawData = Some data; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
+        printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
@@ -615,8 +615,8 @@ let safeComponents =
           components ]
 
 let show = function
-    | { counter = Some counter } -> string counter.Value
-    | { counter = None   } -> "Loading..."
+    | { rawData = None   } -> "Loading..."
+    | _ -> "loaded"
 
 let button txt onClick =
     Button.button
@@ -660,7 +660,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     // |> List.map (fun car -> li[][str car.name])
 
                 let footer =
-                    model.footer 
+                    model.footer
                     |> List.map (fun x -> td[Style [Padding "10px"; BackgroundColor "#888888"; Color "#ffffff"]][x |> str])
 
 
@@ -675,7 +675,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let cars2 =
                     model.groupedCars
                     |> List.map (carToUl)
-                    
+
 
 
                 let cars =
@@ -709,7 +709,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     cars
                     |> List.mapi (carToRow)
 
-                
+
 
 
                 table [] [
@@ -729,7 +729,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     tbody [] [
                         tr [] cars2
                     ]
-                    
+
                 ]
 
 
