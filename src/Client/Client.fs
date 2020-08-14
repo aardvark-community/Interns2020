@@ -45,6 +45,7 @@ type Model =
         groupedCars : list<list<Car>>
         rangeMpg    : Domain
         rangeHp     : Domain
+        hoverText   : string
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -53,6 +54,7 @@ type Msg =
     | LoadCsv
     | Decrement
     | InitialCountLoaded of string
+    | SetHoverText of string
 
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
@@ -80,6 +82,7 @@ let init () : Model * Cmd<Msg> =
                     minimum = 0.0
                     size = 0.0
                 }
+            hoverText = "bla"
         }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
@@ -97,6 +100,8 @@ let tryParse d =
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
+    | _, SetHoverText t ->
+        { currentModel with hoverText = t }, Cmd.none
     | Some data, LoadCsv ->
         let rows = data.Split('\n') |> Array.toList
 
@@ -241,7 +246,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     {
                         minimum = 0.0
                         maximum = 0.0
-                        size = 0.0}}
+                        size = 0.0}
+                hoverText = ""
+            }
         printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
@@ -294,9 +301,10 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 [ Heading.h2 [ ]
                     [ str "Melihs und Sofies Daten-Visualiser!" ] ] ]
 
-          let height = 700
+          div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
+          let height = 300
           let cy = 50
-          let width = 1080
+          let width = 300
 
           let rangeMpg = model.rangeMpg
           let rangeHp = model.rangeHp
@@ -315,7 +323,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 printf "%A %A" cx cy
 
-                circle [Cx cx; Cy (float 700-cy); R "3"; SVGAttr.FillOpacity 0.3][]
+                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
                 )
 
           Container.container [] [
@@ -388,7 +396,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let carToRow i (c : list<string>) : ReactElement =
                     let tds =
-                        c |> List.map (fun x -> td[Style [Padding "10px"]][str x])
+                        c |> List.map (fun x -> td[Style [Padding "10px"]; OnMouseOver (fun _ -> dispatch (SetHoverText x))][str x])
 
 
 
