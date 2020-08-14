@@ -25,18 +25,26 @@ type Car = {
     origin : string
 }
 
+type Domain = {
+    minimum : float
+    maximum : float
+    size : float
+}
+
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
 type Model =
     {
-        rawData      : option<string>
+        rawData     : option<string>
         cars        : list<Car>
         attributes  : list<String>
         footer      : list<String>
         attributes2 : list<String>
         groupedCars : list<list<Car>>
+        rangeMpg    : Domain
+        rangeHp     : Domain
     }
 
 // The Msg type defines what events/actions can occur while the application is running
@@ -52,7 +60,27 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { rawData = None; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
+    let initialModel = 
+        { 
+            rawData = None
+            cars = []
+            attributes = []
+            footer = []
+            attributes2 = []
+            groupedCars = []
+            rangeMpg = 
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+            rangeHp = 
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+        }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -103,6 +131,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             output
 
+        
+
         match rows with
         | [] ->
             printfn "%d" currentModel.cars.Length
@@ -122,6 +152,26 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let newCars =
                 cars
                 |> List.filter(ivalid)
+
+            
+
+            let rangeMpg = 
+                let mpg = newCars |> List.map (fun car -> car.mpg)
+                let range = {
+                    minimum = (mpg |> List.min) - float 1
+                    maximum = (mpg |> List.max) + float 1
+                    size = (mpg |> List.max) - (mpg |> List.min)
+                }
+                range
+        
+            let rangeHp =                 
+                let horsepower = newCars |> List.map (fun car -> car.horsepower)
+                let range = {
+                    minimum = (horsepower |> List.min) - float 1
+                    maximum = (horsepower |> List.max) + float 1
+                    size = (horsepower |> List.max) - (horsepower |> List.min)
+                }
+                range
 
             let gCars = newCars |> List.groupBy (fun car -> car.brand)
 
@@ -169,13 +219,29 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars}
+            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp}
             m, Cmd.none
 
     | Some counter, Decrement ->
         currentModel, Cmd.none
     | _, InitialCountLoaded data ->
-        let nextModel = { rawData = Some data; cars = []; attributes = []; footer = []; attributes2 = []; groupedCars = []}
+        let nextModel = 
+            { 
+                rawData = Some data
+                cars = []; attributes = []
+                footer = []; attributes2 = []
+                groupedCars = []
+                rangeMpg = 
+                    {
+                        minimum = 0.0
+                        maximum = 0.0
+                        size = 0.0
+                    }
+                rangeHp = 
+                    {
+                        minimum = 0.0
+                        maximum = 0.0
+                        size = 0.0}}
         printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
@@ -230,11 +296,30 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
           let height = 700
           let cy = 50
+          let width = 1080
+
+          let rangeMpg = model.rangeMpg
+          let rangeHp = model.rangeHp
+
+          printfn "%A" rangeMpg.minimum
+          printfn "%A" rangeMpg.maximum
+
+          printfn "%A" rangeHp.minimum
+          printfn "%A" rangeHp.maximum
+
+          let circles =
+            model.cars
+            |> List.map (fun car -> 
+                let cx = ((car.mpg - rangeMpg.minimum) / rangeMpg.size) * (float width)
+                let cy = ((car.horsepower - rangeHp.minimum) / rangeHp.size) * (float height)
+
+                printf "%A %A" cx cy
+
+                circle [Cx cx; Cy (float 700-cy); R "3"; SVGAttr.FillOpacity 0.3][]
+                )
 
           Container.container [] [
-            svg [SVGAttr.Width "1080px"; SVGAttr.Height height] [
-                circle [Cx "50"; Cy (700-50); R "40"; SVGAttr.Stroke "green"; SVGAttr.StrokeWidth "4"; SVGAttr.Fill "yellow"][]
-            ]
+            svg [SVGAttr.Width width; SVGAttr.Height height] circles
           ]
 
           Container.container []
