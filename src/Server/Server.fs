@@ -25,7 +25,7 @@ let webApp = router {
     get "/api/init" (fun next ctx ->
         task {
             let counter = {Value = 42}
-            let data = File.ReadAllText @"C:\Users\Melih\Desktop\cars.csv"
+            let data = File.ReadAllText @"../../cars - Copy.csv"
             return! json data next ctx
         })
 }
