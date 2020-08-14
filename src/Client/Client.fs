@@ -12,6 +12,7 @@ open Thoth.Json
 open Shared
 open System
 
+printf "C:\Users\Melih\Desktop\Interns2020\cars - Copy.csv"
 
 let data =
 
@@ -422,6 +423,7 @@ let data =
     dodge rampage,32.0000,4.0000,135.0000,84.0000,2295.0000,11.6000,82.0000,1.0000,
     ford ranger,28.0000,4.0000,120.0000,79.0000,2625.0000,18.6000,82.0000,1.0000,
     chevy s-10,31.0000,4.0000,119.0000,82.0000,2720.0000,19.4000,82.0000,1.0000, """
+
 
 
 type Car = {
