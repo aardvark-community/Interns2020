@@ -25,18 +25,6 @@ type Car = {
     origin : string
 }
 
-type Car = {
-    name : string
-    mpg : float
-    cylinders : float
-    engineDisplacement : float
-    horsepower : float // int
-    weight : float
-    acceleration : float
-    modelYear : float // int
-    origin : float
-}
-
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
