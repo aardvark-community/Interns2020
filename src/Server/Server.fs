@@ -10,9 +10,9 @@ open Saturn
 open Shared
 
 
-let tryGetEnv key = 
+let tryGetEnv key =
     match Environment.GetEnvironmentVariable key with
-    | x when String.IsNullOrWhiteSpace x -> None 
+    | x when String.IsNullOrWhiteSpace x -> None
     | x -> Some x
 
 let publicPath = Path.GetFullPath "../Client/public"
@@ -25,7 +25,9 @@ let webApp = router {
     get "/api/init" (fun next ctx ->
         task {
             let counter = {Value = 42}
-            return! json counter next ctx
+            printfn "loading data"
+            let data = File.ReadAllText @"../../cars - Copy.csv"
+            return! json data next ctx
         })
 }
 
