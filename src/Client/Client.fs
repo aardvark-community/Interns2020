@@ -46,35 +46,35 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         printfn "loading csv"
         let cars,header = Cars.Parser.parse data        
 
+        let rangeMpg =
+            let mpg = cars |> List.map (fun car -> car.mpg)
+            let range = {
+                minimum = (mpg |> List.min)//  - float 1
+                maximum = (mpg |> List.max)//  + float 1
+                size = (mpg |> List.max) - (mpg |> List.min)
+            }
+            range
+
+        let rangeHp =
+            let horsepower = cars |> List.map (fun car -> car.horsepower)
+            let range = {
+                minimum = (horsepower |> List.min)//  - float 1
+                maximum = (horsepower |> List.max)//  + float 1
+                size = (horsepower |> List.max) - (horsepower |> List.min)
+            }
+            range
+
         let currentModel =
             {
                 currentModel with
-                    cars = cars
+                    cars       = cars
                     attributes = header
+                    rangeMpg   = rangeMpg
+                    rangeHp    = rangeHp
             }
 
         currentModel, Cmd.none
-
-       
-
-            //let rangeMpg =
-            //    let mpg = newCars |> List.map (fun car -> car.mpg)
-            //    let range = {
-            //        minimum = (mpg |> List.min)//  - float 1
-            //        maximum = (mpg |> List.max)//  + float 1
-            //        size = (mpg |> List.max) - (mpg |> List.min)
-            //    }
-            //    range
-
-            //let rangeHp =
-            //    let horsepower = newCars |> List.map (fun car -> car.horsepower)
-            //    let range = {
-            //        minimum = (horsepower |> List.min)//  - float 1
-            //        maximum = (horsepower |> List.max)//  + float 1
-            //        size = (horsepower |> List.max) - (horsepower |> List.min)
-            //    }
-            //    range
-
+      
             //let rangeCy =
             //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
             //    let range = {
@@ -156,35 +156,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Some counter, Decrement ->
         currentModel, Cmd.none
     | _, InitialCountLoaded data ->
-        let nextModel =
-            {
-                rawData = Some data
-                cars = []; attributes = []
-                footer = []; attributes2 = []
-                groupedCars = []
-                rangeMpg =
-                    {
-                        minimum = 0.0
-                        maximum = 0.0
-                        size = 0.0
-                    }
-                rangeHp =
-                    {
-                        minimum = 0.0
-                        maximum = 0.0
-                        size = 0.0}
-                rangeCy =
-                    {
-                        minimum = 0.0
-                        maximum = 0.0
-                        size = 0.0}
-                rangeEd =
-                    {
-                        minimum = 0.0
-                        maximum = 0.0
-                        size = 0.0}
-                hoverText = ""
-            }
+        let nextModel = { Model.initialModel with rawData = Some data }
+      
         printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
@@ -246,15 +219,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let width = 1080
         
             let rangeMpg = model.rangeMpg
-            let rangeHp = model.rangeHp
-            let rangeCy = model.rangeCy
-            let rangeEd = model.rangeEd
-        
-          // printfn "%A" rangeMpg.minimum
-          // printfn "%A" rangeMpg.maximum
-        
-          // printfn "%A" rangeHp.minimum
-          // printfn "%A" rangeHp.maximum
+            let rangeHp = model.rangeHp                    
                     
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
@@ -270,12 +235,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
         
-            let circles : list<ReactElement> = []
+            //let circles : list<ReactElement> = []
         
             let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
         
-            let circleLine = lineX :: circles // rangeMpg rangeEd
+            let circleLine = lineX :: circles rangeMpg rangeHp
             let fcircleLine = lineY :: circleLine
         
             Container.container [] [

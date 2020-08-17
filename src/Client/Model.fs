@@ -2,6 +2,12 @@ namespace Cars
 
 open System
 
+type Origin =
+| USA
+| Europe
+| Asia
+| Other
+
 type Car = {
     brand              : string
     name               : string
@@ -12,7 +18,7 @@ type Car = {
     weight             : float
     acceleration       : float
     modelYear          : float //int
-    origin             : string
+    origin             : Origin
 }
 
 type Domain = {
@@ -51,7 +57,7 @@ module Car =
             string car.weight
             string car.acceleration
             string car.modelYear
-            car.origin
+            car.origin.ToString()
         ]
 
 module Model = 

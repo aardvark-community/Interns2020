@@ -5,13 +5,12 @@ open Cars
 
 module Parser =
 
-    let parseOrigin (origin : String) : String =
-        match origin with
-        |"" -> ""
-        |"1.0000" -> "USA"
-        |"2.0000" -> "Europe"
-        |"3.0000" -> "Asia"
-        | _ -> "Other"
+    let parseOrigin (origin : float) : Origin =
+        match origin with        
+        |1.0 -> Origin.USA
+        |2.0 -> Origin.Europe
+        |3.0 -> Origin.Asia
+        | _ -> Origin.Other
 
     let isValid (car : Car) : bool =
         not (
@@ -23,8 +22,7 @@ module Parser =
             car.horsepower         |> Double.IsNaN ||
             car.weight             |> Double.IsNaN ||
             car.acceleration       |> Double.IsNaN ||
-            car.modelYear          |> Double.IsNaN ||
-            car.origin             = ""
+            car.modelYear          |> Double.IsNaN  
         )
 
     let tryParse d =
@@ -56,7 +54,7 @@ module Parser =
             weight             = attr.[5] |> tryParse
             acceleration       = attr.[6] |> tryParse
             modelYear          = attr.[7] |> tryParse //int
-            origin             = attr.[8]
+            origin             = attr.[8] |> tryParse |> parseOrigin
         }
     
         output    
@@ -73,7 +71,7 @@ module Parser =
             
             let cars = tail |> List.mapi (fun i row -> parseRow i row)            
             
-            //let carsFiltered =
-            //    cars
-            //    |> List.filter(Cars.Parser.isValid)
-            cars, newHeader
+            let carsFiltered =
+                cars
+                |> List.filter(isValid)
+            carsFiltered, newHeader
