@@ -180,7 +180,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 let horsepower = newCars |> List.map (fun car -> car.horsepower)
                 let range = {
                     minimum = (horsepower |> List.min)//  - float 1
-                    maximum = (horsepower |> List.max) + float 1
+                    maximum = (horsepower |> List.max)//  + float 1
                     size = (horsepower |> List.max) - (horsepower |> List.min)
                 }
                 range
@@ -331,11 +331,11 @@ let view (model : Model) (dispatch : Msg -> unit) =
           let rangeHp = model.rangeHp
           let rangeCy = model.rangeCy
 
-          printfn "%A" rangeMpg.minimum
-          printfn "%A" rangeMpg.maximum
+          // printfn "%A" rangeMpg.minimum
+          // printfn "%A" rangeMpg.maximum
 
-          printfn "%A" rangeHp.minimum
-          printfn "%A" rangeHp.maximum
+          // printfn "%A" rangeHp.minimum
+          // printfn "%A" rangeHp.maximum
 
 
 
@@ -345,9 +345,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let cx = ((car.mpg - rangeX.minimum) / rangeX.size) * (float width)
                 let cy = ((car.horsepower - rangeY.minimum) / rangeY.size) * (float height)
 
-                //printf "%A %A" cx cy
+                //printf "%A %A" cx c
 
-                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
+                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
                 )
 
           let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
