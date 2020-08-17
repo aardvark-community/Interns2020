@@ -44,6 +44,7 @@ type Model =
         attributes2 : list<String>
         groupedCars : list<list<Car>>
         rangeMpg    : Domain
+        rangecy     : Domain
         rangeHp     : Domain
         hoverText   : string
     }
@@ -62,21 +63,27 @@ open System
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = 
-        { 
+    let initialModel =
+        {
             rawData = None
             cars = []
             attributes = []
             footer = []
             attributes2 = []
             groupedCars = []
-            rangeMpg = 
+            rangeMpg =
                 {
                     maximum = 0.0
                     minimum = 0.0
                     size = 0.0
                 }
-            rangeHp = 
+            rangeHp =
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+            rangecy =
                 {
                     maximum = 0.0
                     minimum = 0.0
@@ -136,7 +143,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             output
 
-        
+
 
         match rows with
         | [] ->
@@ -158,9 +165,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 cars
                 |> List.filter(ivalid)
 
-            
 
-            let rangeMpg = 
+
+            let rangeMpg =
                 let mpg = newCars |> List.map (fun car -> car.mpg)
                 let range = {
                     minimum = (mpg |> List.min) - float 1
@@ -168,13 +175,22 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     size = (mpg |> List.max) - (mpg |> List.min)
                 }
                 range
-        
-            let rangeHp =                 
+
+            let rangeHp =
                 let horsepower = newCars |> List.map (fun car -> car.horsepower)
                 let range = {
                     minimum = (horsepower |> List.min) - float 1
                     maximum = (horsepower |> List.max) + float 1
                     size = (horsepower |> List.max) - (horsepower |> List.min)
+                }
+                range
+
+            let rangecy =
+                let cylinders = newCars |> List.map (fun car -> car.cylinders)
+                let range = {
+                    minimum = (cylinders |> List.min) - float 1
+                    maximum = (cylinders |> List.max) + float 1
+                    size = (cylinders |> List.max) - (cylinders |> List.min)
                 }
                 range
 
@@ -224,25 +240,30 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp}
+            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangecy = rangecy;}
             m, Cmd.none
 
     | Some counter, Decrement ->
         currentModel, Cmd.none
     | _, InitialCountLoaded data ->
-        let nextModel = 
-            { 
+        let nextModel =
+            {
                 rawData = Some data
                 cars = []; attributes = []
                 footer = []; attributes2 = []
                 groupedCars = []
-                rangeMpg = 
+                rangeMpg =
                     {
                         minimum = 0.0
                         maximum = 0.0
                         size = 0.0
                     }
-                rangeHp = 
+                rangeHp =
+                    {
+                        minimum = 0.0
+                        maximum = 0.0
+                        size = 0.0}
+                rangecy =
                     {
                         minimum = 0.0
                         maximum = 0.0
@@ -302,12 +323,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ str "Melihs und Sofies Daten-Visualiser!" ] ] ]
 
           div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
-          let height = 300
+          let height = 700
           let cy = 50
-          let width = 300
+          let width = 1080
 
           let rangeMpg = model.rangeMpg
           let rangeHp = model.rangeHp
+          let rangecy = model.rangecy
 
           printfn "%A" rangeMpg.minimum
           printfn "%A" rangeMpg.maximum
@@ -317,7 +339,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
           let circles =
             model.cars
-            |> List.map (fun car -> 
+            |> List.map (fun car ->
                 let cx = ((car.mpg - rangeMpg.minimum) / rangeMpg.size) * (float width)
                 let cy = ((car.horsepower - rangeHp.minimum) / rangeHp.size) * (float height)
 
@@ -326,8 +348,21 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
                 )
 
+          let circles2 =
+            model.cars
+            |> List.map (fun car ->
+                let cx = ((car.mpg - rangeMpg.minimum) / rangeMpg.size) * (float width)
+                let cy = ((car.cylinders - rangecy.minimum) / rangecy.size) * (float height)
+
+                printf "%A %A" cx cy
+
+                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
+                )
+
+
+
           Container.container [] [
-            svg [SVGAttr.Width width; SVGAttr.Height height] circles
+            svg [SVGAttr.Width width; SVGAttr.Height height] circles2
           ]
 
           Container.container []
