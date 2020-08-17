@@ -12,43 +12,7 @@ open Thoth.Json
 open Shared
 open System
 
-type Car = {
-    brand : string
-    name : string
-    mpg : float
-    cylinders : float
-    engineDisplacement : float
-    horsepower : float //int
-    weight : float
-    acceleration : float
-    modelYear : float //int
-    origin : string
-}
-
-type Domain = {
-    minimum : float
-    maximum : float
-    size : float
-}
-
-// The model holds data that you want to keep track of while the application is running
-// in this case, we are keeping track of a counter
-// we mark it as optional, because initially it will not be available from the client
-// the initial value will be requested from server
-type Model =
-    {
-        rawData     : option<string>
-        cars        : list<Car>
-        attributes  : list<String>
-        footer      : list<String>
-        attributes2 : list<String>
-        groupedCars : list<list<Car>>
-        rangeMpg    : Domain
-        rangeCy     : Domain
-        rangeHp     : Domain
-        rangeEd     : Domain
-        hoverText   : string
-    }
+open Cars.Model
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
@@ -61,43 +25,12 @@ type Msg =
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
 open System
+open Cars.Car
+open Cars
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel =
-        {
-            rawData = None
-            cars = []
-            attributes = []
-            footer = []
-            attributes2 = []
-            groupedCars = []
-            rangeMpg =
-                {
-                    maximum = 0.0
-                    minimum = 0.0
-                    size = 0.0
-                }
-            rangeHp =
-                {
-                    maximum = 0.0
-                    minimum = 0.0
-                    size = 0.0
-                }
-            rangeCy =
-                {
-                    maximum = 0.0
-                    minimum = 0.0
-                    size = 0.0
-                }
-            rangeEd =
-                {
-                    maximum = 0.0
-                    minimum = 0.0
-                    size = 0.0
-                }
-            hoverText = "lala"
-        }
+    
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -108,6 +41,34 @@ let tryParse d =
     | "" -> nan
     |  _ -> d |> Double.Parse
 
+let parseRow i (row : string) : Car =
+
+    printfn "splitting row"
+    printfn "%d %A" i row
+    let attr = row.Split(',')
+
+    let carName = attr.[0].Trim()
+
+    let index = carName.IndexOf(' ')
+
+    let brand = carName.Substring(0, index)
+
+    let name = carName.Substring(index)
+
+    let output = {
+        brand              = brand
+        name               = name
+        mpg                = attr.[1] |> tryParse
+        cylinders          = attr.[2] |> tryParse
+        engineDisplacement = attr.[3] |> tryParse
+        horsepower         = attr.[4] |> tryParse //int
+        weight             = attr.[5] |> tryParse
+        acceleration       = attr.[6] |> tryParse
+        modelYear          = attr.[7] |> tryParse //int
+        origin             = attr.[8]
+    }
+
+    output
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -117,40 +78,12 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | _, SetHoverText t ->
         { currentModel with hoverText = t }, Cmd.none
     | Some data, LoadCsv ->
+
+        let cars = Cars.Parser.parse data
+
         let rows = data.Split('\n') |> Array.toList
 
         printfn "loading csv"
-
-        let parseRow i (row : string) : Car =
-
-            printfn "splitting row"
-            printfn "%d %A" i row
-            let attr = row.Split(',')
-
-            let carName = attr.[0].Trim()
-
-            let index = carName.IndexOf(' ')
-
-            let brand = carName.Substring(0, index)
-
-            let name = carName.Substring(index)
-
-            let output = {
-                brand              = brand
-                name               = name
-                mpg                = attr.[1] |> tryParse
-                cylinders          = attr.[2] |> tryParse
-                engineDisplacement = attr.[3] |> tryParse
-                horsepower         = attr.[4] |> tryParse //int
-                weight             = attr.[5] |> tryParse
-                acceleration       = attr.[6] |> tryParse
-                modelYear          = attr.[7] |> tryParse //int
-                origin             = attr.[8]
-            }
-
-            output
-
-
 
         match rows with
         | [] ->
@@ -165,98 +98,106 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             printfn "%A" cars
 
-            let ivalid (car : Car) : bool =
-                not (car.brand = "" || car.name = "" || car.mpg |> Double.IsNaN || car.cylinders |> Double.IsNaN || car.engineDisplacement |> Double.IsNaN || car.horsepower |> Double.IsNaN || car.weight |> Double.IsNaN || car.acceleration |> Double.IsNaN || car.modelYear |> Double.IsNaN || car.origin = "")
+            
 
-            let newCars =
+            let carsFiltered =
                 cars
-                |> List.filter(ivalid)
+                |> List.filter(Cars.Parser.isValid)
+
+            //let rangeMpg =
+            //    let mpg = newCars |> List.map (fun car -> car.mpg)
+            //    let range = {
+            //        minimum = (mpg |> List.min)//  - float 1
+            //        maximum = (mpg |> List.max)//  + float 1
+            //        size = (mpg |> List.max) - (mpg |> List.min)
+            //    }
+            //    range
+
+            //let rangeHp =
+            //    let horsepower = newCars |> List.map (fun car -> car.horsepower)
+            //    let range = {
+            //        minimum = (horsepower |> List.min)//  - float 1
+            //        maximum = (horsepower |> List.max)//  + float 1
+            //        size = (horsepower |> List.max) - (horsepower |> List.min)
+            //    }
+            //    range
+
+            //let rangeCy =
+            //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
+            //    let range = {
+            //        minimum = (cylinders |> List.min)//  - float 1
+            //        maximum = (cylinders |> List.max)//  + float 1
+            //        size = (cylinders |> List.max) - (cylinders |> List.min)
+            //    }
+            //    range
+
+            //let rangeEd =
+            //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
+            //    let range = {
+            //        minimum = (cylinders |> List.min)//  - float 1
+            //        maximum = (cylinders |> List.max)//  + float 1
+            //        size = (cylinders |> List.max) - (cylinders |> List.min)
+            //    }
+            //    range
+
+            //let gCars = newCars |> List.groupBy (fun car -> car.brand)
+
+            //let head2 =
+            //    gCars |> List.map (fst)
+
+            //let groupedCars =
+            //    gCars |> List.map (snd)
+
+            //let carMpg =
+            //    newCars
+            //    |> List.map (fun car -> car.mpg)
+
+            //let carCyl =
+            //    newCars
+            //    |> List.map (fun car -> car.cylinders)
+
+            //let carEng =
+            //    newCars
+            //    |> List.map (fun car -> car.engineDisplacement)
+
+            //let carHp =
+            //    newCars
+            //    |> List.map (fun car -> car.horsepower)
+
+            //let carVw =
+            //    newCars
+            //    |> List.map (fun car -> car.weight)
+
+            //let carAcc =
+            //    newCars
+            //    |> List.map (fun car -> car.acceleration)
+
+            //let carMy =
+            //    newCars
+            //    |> List.map (fun car -> car.modelYear)
+
+            //let numOfCars =
+            //    newCars
+            //    |> List.length
+
+            //let avg (input : list<float>) : float =
+            //    input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
+
+            //let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-
-            let rangeMpg =
-                let mpg = newCars |> List.map (fun car -> car.mpg)
-                let range = {
-                    minimum = (mpg |> List.min)//  - float 1
-                    maximum = (mpg |> List.max)//  + float 1
-                    size = (mpg |> List.max) - (mpg |> List.min)
-                }
-                range
-
-            let rangeHp =
-                let horsepower = newCars |> List.map (fun car -> car.horsepower)
-                let range = {
-                    minimum = (horsepower |> List.min)//  - float 1
-                    maximum = (horsepower |> List.max)//  + float 1
-                    size = (horsepower |> List.max) - (horsepower |> List.min)
-                }
-                range
-
-            let rangeCy =
-                let cylinders = newCars |> List.map (fun car -> car.cylinders)
-                let range = {
-                    minimum = (cylinders |> List.min)//  - float 1
-                    maximum = (cylinders |> List.max)//  + float 1
-                    size = (cylinders |> List.max) - (cylinders |> List.min)
-                }
-                range
-
-            let rangeEd =
-                let cylinders = newCars |> List.map (fun car -> car.cylinders)
-                let range = {
-                    minimum = (cylinders |> List.min)//  - float 1
-                    maximum = (cylinders |> List.max)//  + float 1
-                    size = (cylinders |> List.max) - (cylinders |> List.min)
-                }
-                range
-
-            let gCars = newCars |> List.groupBy (fun car -> car.brand)
-
-            let head2 =
-                gCars |> List.map (fst)
-
-            let groupedCars =
-                gCars |> List.map (snd)
-
-            let carMpg =
-                newCars
-                |> List.map (fun car -> car.mpg)
-
-            let carCyl =
-                newCars
-                |> List.map (fun car -> car.cylinders)
-
-            let carEng =
-                newCars
-                |> List.map (fun car -> car.engineDisplacement)
-
-            let carHp =
-                newCars
-                |> List.map (fun car -> car.horsepower)
-
-            let carVw =
-                newCars
-                |> List.map (fun car -> car.weight)
-
-            let carAcc =
-                newCars
-                |> List.map (fun car -> car.acceleration)
-
-            let carMy =
-                newCars
-                |> List.map (fun car -> car.modelYear)
-
-            let numOfCars =
-                newCars
-                |> List.length
-
-            let avg (input : list<float>) : float =
-                input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
-
-            let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
-
-
-            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangeCy = rangeCy; rangeEd = rangeEd;}
+            let m = {
+                currentModel with
+                    cars = cars;
+                    attributes = newHead;
+                    //footer = foot;
+                    //attributes2 = head2;
+                    //groupedCars = groupedCars;
+                    //rangeMpg = rangeMpg;
+                    //rangeHp = rangeHp;
+                    //rangeCy = rangeCy;
+                    //rangeEd = rangeEd;
+            }
             m, Cmd.none
 
     | Some counter, Decrement ->
@@ -359,27 +300,29 @@ let view (model : Model) (dispatch : Msg -> unit) =
           // printfn "%A" rangeHp.minimum
           // printfn "%A" rangeHp.maximum
 
-
+          
+          
 
           let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
-            model.cars
-            |> List.map (fun car ->
-                let cx = ((car.mpg - rangeX.minimum) / rangeX.size) * (float width)
-                let cy = ((car.horsepower - rangeY.minimum) / rangeY.size) * (float height)
+              model.cars
+              |> List.map (fun car ->                
+                  Cars.Visualization.circle
+                    car
+                    (fun car -> car.mpg)
+                    (rangeX)
+                    (fun car -> car.horsepower)
+                    (rangeY)
+                    width
+                    height
+                    (fun _ -> dispatch (SetHoverText car.name))
+              )
 
-                //printf "%A %A" cx c
-                match car.origin with
-                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                | _ ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-
-                )
+          let circles : list<ReactElement> = failwith "hilfe"
 
           let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
           let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
 
-          let circleLine = lineX :: circles rangeMpg rangeEd
+          let circleLine = lineX :: circles // rangeMpg rangeEd
           let fcircleLine = lineY :: circleLine
 
           Container.container [] [
@@ -393,15 +336,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
-
-                let changeOrigin (origin : String) : String =
-                    match origin with
-                    |"" -> ""
-                    |"1.0000" -> "USA"
-                    |"2.0000" -> "Europe"
-                    |"3.0000" -> "Asia"
-                    | _ -> "Other"
-
+                
                 let header2 =
                     model.attributes2
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
@@ -416,7 +351,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.footer
                     |> List.map (fun x -> td[Style [Padding "10px"; BackgroundColor "#888888"; Color "#ffffff"]][x |> str])
 
-
                 let header =
                     model.attributes
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
@@ -429,41 +363,15 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.groupedCars
                     |> List.map (carToUl)
 
-
-
-                let cars =
+                let stringifiedCars =
                     model.cars
-                    |> List.map (fun car ->
-                        [
-                            car.brand
-                            car.name
-                            string car.mpg
-                            string car.cylinders
-                            string car.engineDisplacement
-                            string car.horsepower
-                            string car.weight
-                            string car.acceleration
-                            string car.modelYear
-                            changeOrigin car.origin
-                        ]
-                    )
-
-
-
-                let carToRow i (c : list<string>) : ReactElement =
-                    let tds =
-                        c |> List.map (fun x -> td[Style [Padding "10px"]; OnMouseOver (fun _ -> dispatch (SetHoverText x))][str x])
-
-
-
-                    tr [ if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]] tds
+                    |> List.map(fun c -> Cars.Car.stringify c)
 
                 let tableRows =
-                    cars
-                    |> List.mapi (carToRow)
-
-
-
+                    stringifiedCars
+                    |> List.mapi (fun i c ->
+                        Cars.Visualization.carToRow i c (fun _ -> dispatch (SetHoverText "brrr"))
+                    )
 
                 table [] [
                     thead [] [
@@ -482,14 +390,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     tbody [] [
                         tr [] cars2
                     ]
-
                 ]
-
-
-
-
                 //ul [] carNames
-
             ]
 
           Footer.footer [ ]
