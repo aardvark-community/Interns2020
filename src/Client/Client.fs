@@ -44,7 +44,7 @@ type Model =
         attributes2 : list<String>
         groupedCars : list<list<Car>>
         rangeMpg    : Domain
-        rangecy     : Domain
+        rangeCy     : Domain
         rangeHp     : Domain
         hoverText   : string
     }
@@ -83,7 +83,7 @@ let init () : Model * Cmd<Msg> =
                     minimum = 0.0
                     size = 0.0
                 }
-            rangecy =
+            rangeCy =
                 {
                     maximum = 0.0
                     minimum = 0.0
@@ -170,8 +170,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let rangeMpg =
                 let mpg = newCars |> List.map (fun car -> car.mpg)
                 let range = {
-                    minimum = (mpg |> List.min) - float 1
-                    maximum = (mpg |> List.max) + float 1
+                    minimum = (mpg |> List.min)//  - float 1
+                    maximum = (mpg |> List.max)//  + float 1
                     size = (mpg |> List.max) - (mpg |> List.min)
                 }
                 range
@@ -179,17 +179,17 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let rangeHp =
                 let horsepower = newCars |> List.map (fun car -> car.horsepower)
                 let range = {
-                    minimum = (horsepower |> List.min) - float 1
+                    minimum = (horsepower |> List.min)//  - float 1
                     maximum = (horsepower |> List.max) + float 1
                     size = (horsepower |> List.max) - (horsepower |> List.min)
                 }
                 range
 
-            let rangecy =
+            let rangeCy =
                 let cylinders = newCars |> List.map (fun car -> car.cylinders)
                 let range = {
-                    minimum = (cylinders |> List.min) - float 1
-                    maximum = (cylinders |> List.max) + float 1
+                    minimum = (cylinders |> List.min)//  - float 1
+                    maximum = (cylinders |> List.max)//  + float 1
                     size = (cylinders |> List.max) - (cylinders |> List.min)
                 }
                 range
@@ -240,7 +240,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangecy = rangecy;}
+            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangeCy = rangeCy;}
             m, Cmd.none
 
     | Some counter, Decrement ->
@@ -263,7 +263,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                         minimum = 0.0
                         maximum = 0.0
                         size = 0.0}
-                rangecy =
+                rangeCy =
                     {
                         minimum = 0.0
                         maximum = 0.0
@@ -329,7 +329,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
           let rangeMpg = model.rangeMpg
           let rangeHp = model.rangeHp
-          let rangecy = model.rangecy
+          let rangeCy = model.rangeCy
 
           printfn "%A" rangeMpg.minimum
           printfn "%A" rangeMpg.maximum
@@ -350,21 +350,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
                 )
 
-          let circles2 =
-            model.cars
-            |> List.map (fun car ->
-                let cx = ((car.mpg - rangeMpg.minimum) / rangeMpg.size) * (float width)
-                let cy = ((car.cylinders - rangecy.minimum) / rangecy.size) * (float height)
+          let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
+          let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
 
-                printf "%A %A" cx cy
-
-                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
-                )
-
-
+          let circleLine = lineX :: circles rangeMpg rangeHp
+          let fcircleLine = lineY :: circleLine
 
           Container.container [] [
-            svg [SVGAttr.Width width; SVGAttr.Height height] circles2
+            svg [SVGAttr.Width width; SVGAttr.Height height] fcircleLine
           ]
 
           Container.container []
