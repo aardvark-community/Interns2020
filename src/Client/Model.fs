@@ -15,6 +15,29 @@ type Car = {
     origin             : string
 }
 
+type Domain = {
+    minimum : float
+    maximum : float
+    size    : float
+}
+
+// The model holds data that you want to keep track of while the application is running
+// in this case, we are keeping track of a counter
+// we mark it as optional, because initially it will not be available from the client
+// the initial value will be requested from server
+type Model = {
+    rawData     : option<string>
+    cars        : list<Car>
+    attributes  : list<String>
+    footer      : list<String>
+    attributes2 : list<String>
+    groupedCars : list<list<Car>>
+    rangeMpg    : Domain
+    rangeCy     : Domain
+    rangeHp     : Domain
+    rangeEd     : Domain
+    hoverText   : string
+}
 
 module Car =
     let stringify (car : Car) : list<string> =
@@ -34,29 +57,7 @@ module Car =
 module Model = 
     
     
-    type Domain = {
-        minimum : float
-        maximum : float
-        size    : float
-    }
     
-    // The model holds data that you want to keep track of while the application is running
-    // in this case, we are keeping track of a counter
-    // we mark it as optional, because initially it will not be available from the client
-    // the initial value will be requested from server
-    type Model = {
-        rawData     : option<string>
-        cars        : list<Car>
-        attributes  : list<String>
-        footer      : list<String>
-        attributes2 : list<String>
-        groupedCars : list<list<Car>>
-        rangeMpg    : Domain
-        rangeCy     : Domain
-        rangeHp     : Domain
-        rangeEd     : Domain
-        hoverText   : string
-    }
 
     let initialModel =
         {

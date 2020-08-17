@@ -12,7 +12,7 @@ open Thoth.Json
 open Shared
 open System
 
-open Cars.Model
+open Cars
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
@@ -24,51 +24,15 @@ type Msg =
 
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
-open System
-open Cars.Car
-open Cars
-
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
     
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
-    initialModel, loadCountCmd
+    Model.initialModel, loadCountCmd
 
-let tryParse d =
-    match d with
-    | "" -> nan
-    |  _ -> d |> Double.Parse
 
-let parseRow i (row : string) : Car =
-
-    printfn "splitting row"
-    printfn "%d %A" i row
-    let attr = row.Split(',')
-
-    let carName = attr.[0].Trim()
-
-    let index = carName.IndexOf(' ')
-
-    let brand = carName.Substring(0, index)
-
-    let name = carName.Substring(index)
-
-    let output = {
-        brand              = brand
-        name               = name
-        mpg                = attr.[1] |> tryParse
-        cylinders          = attr.[2] |> tryParse
-        engineDisplacement = attr.[3] |> tryParse
-        horsepower         = attr.[4] |> tryParse //int
-        weight             = attr.[5] |> tryParse
-        acceleration       = attr.[6] |> tryParse
-        modelYear          = attr.[7] |> tryParse //int
-        origin             = attr.[8]
-    }
-
-    output
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -79,30 +43,19 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         { currentModel with hoverText = t }, Cmd.none
     | Some data, LoadCsv ->
 
-        let cars = Cars.Parser.parse data
-
-        let rows = data.Split('\n') |> Array.toList
-
         printfn "loading csv"
+        let cars,header = Cars.Parser.parse data        
 
-        match rows with
-        | [] ->
-            printfn "%d" currentModel.cars.Length
-            currentModel, Cmd.none
-        | h::t ->
-            printfn "parsing header"
-            let head = h.Split(',') |> Array.toList
-            let newHead = "Brand" :: head
-            //printfn "%d" currentModel.cars.Length
-            let cars = t |> List.mapi (fun row i -> parseRow row i)
+        let currentModel =
+            {
+                currentModel with
+                    cars = cars
+                    attributes = header
+            }
 
-            printfn "%A" cars
+        currentModel, Cmd.none
 
-            
-
-            let carsFiltered =
-                cars
-                |> List.filter(Cars.Parser.isValid)
+       
 
             //let rangeMpg =
             //    let mpg = newCars |> List.map (fun car -> car.mpg)
@@ -186,19 +139,19 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             //let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-            let m = {
-                currentModel with
-                    cars = cars;
-                    attributes = newHead;
-                    //footer = foot;
-                    //attributes2 = head2;
-                    //groupedCars = groupedCars;
-                    //rangeMpg = rangeMpg;
-                    //rangeHp = rangeHp;
-                    //rangeCy = rangeCy;
-                    //rangeEd = rangeEd;
-            }
-            m, Cmd.none
+            //let m = {
+            //    currentModel with
+            //        cars = cars;
+            //        attributes = newHead;
+            //        //footer = foot;
+            //        //attributes2 = head2;
+            //        //groupedCars = groupedCars;
+            //        //rangeMpg = rangeMpg;
+            //        //rangeHp = rangeHp;
+            //        //rangeCy = rangeCy;
+            //        //rangeEd = rangeEd;
+            //}
+            //m, Cmd.none
 
     | Some counter, Decrement ->
         currentModel, Cmd.none
@@ -251,7 +204,6 @@ let safeComponents =
              a [ Href "https://elmish.github.io" ] [ str "Elmish" ]
              str ", "
              a [ Href "https://fulma.github.io/Fulma" ] [ str "Fulma" ]
-
            ]
 
     span [ ]
@@ -279,58 +231,58 @@ let button txt onClick =
 let view (model : Model) (dispatch : Msg -> unit) =
 
     div []
-        [ Navbar.navbar [ Navbar.Color IsPrimary ]
-            [ Navbar.Item.div [ ]
-                [ Heading.h2 [ ]
-                    [ str "Melihs und Sofies Daten-Visualiser!" ] ] ]
+        [
+            Navbar.navbar [ Navbar.Color IsPrimary ] [
+                Navbar.Item.div [ ]
+                    [ Heading.h2 [ ]
+                        [ str "Melihs und Sofies Daten-Visualiser!" ]
+                    ]
+                ]
+        
+            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
 
-          div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
-          let height = 700
-          let cy = 50
-          let width = 1080
-
-          let rangeMpg = model.rangeMpg
-          let rangeHp = model.rangeHp
-          let rangeCy = model.rangeCy
-          let rangeEd = model.rangeEd
-
+            let height = 700
+            let cy = 50
+            let width = 1080
+        
+            let rangeMpg = model.rangeMpg
+            let rangeHp = model.rangeHp
+            let rangeCy = model.rangeCy
+            let rangeEd = model.rangeEd
+        
           // printfn "%A" rangeMpg.minimum
           // printfn "%A" rangeMpg.maximum
-
+        
           // printfn "%A" rangeHp.minimum
           // printfn "%A" rangeHp.maximum
-
-          
-          
-
-          let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
-              model.cars
-              |> List.map (fun car ->                
-                  Cars.Visualization.circle
-                    car
-                    (fun car -> car.mpg)
-                    (rangeX)
-                    (fun car -> car.horsepower)
-                    (rangeY)
-                    width
-                    height
-                    (fun _ -> dispatch (SetHoverText car.name))
-              )
-
-          let circles : list<ReactElement> = failwith "hilfe"
-
-          let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
-          let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
-
-          let circleLine = lineX :: circles // rangeMpg rangeEd
-          let fcircleLine = lineY :: circleLine
-
-          Container.container [] [
-            svg [SVGAttr.Width width; SVGAttr.Height height] fcircleLine
-          ]
-
-          Container.container []
-            [
+                    
+            let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
+                model.cars
+                |> List.map (fun car ->                
+                    Cars.Visualization.circle
+                        car
+                        (fun car -> car.mpg)
+                        (rangeX)
+                        (fun car -> car.horsepower)
+                        (rangeY)
+                        width
+                        height
+                        (fun _ -> dispatch (SetHoverText car.name))
+                )
+        
+            let circles : list<ReactElement> = []
+        
+            let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
+            let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
+        
+            let circleLine = lineX :: circles // rangeMpg rangeEd
+            let fcircleLine = lineY :: circleLine
+        
+            Container.container [] [
+                svg [SVGAttr.Width width; SVGAttr.Height height] fcircleLine
+            ]
+        
+            Container.container [] [
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
@@ -340,39 +292,39 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let header2 =
                     model.attributes2
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-
+        
                 //let carNames =
                     //model.cars
                      //|> List.filter (fun c -> c.name.StartsWith("a"))
                     // |> List.sortBy (fun car -> car.name)
                     // |> List.map (fun car -> li[][str car.name])
-
+        
                 let footer =
                     model.footer
                     |> List.map (fun x -> td[Style [Padding "10px"; BackgroundColor "#888888"; Color "#ffffff"]][x |> str])
-
+        
                 let header =
                     model.attributes
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-
+        
                 let carToUl (l : list<Car>) : ReactElement =
                     let l2 = l |> List.map (fun car -> li [] [str car.name])
                     td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
-
+        
                 let cars2 =
                     model.groupedCars
                     |> List.map (carToUl)
-
+        
                 let stringifiedCars =
                     model.cars
                     |> List.map(fun c -> Cars.Car.stringify c)
-
+        
                 let tableRows =
                     stringifiedCars
                     |> List.mapi (fun i c ->
                         Cars.Visualization.carToRow i c (fun _ -> dispatch (SetHoverText "brrr"))
                     )
-
+        
                 table [] [
                     thead [] [
                         tr [] header
@@ -382,7 +334,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         tr [] footer
                     ]
                 ]
-
+        
                 table [] [
                     thead [] [
                         tr [] header2
@@ -393,11 +345,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 ]
                 //ul [] carNames
             ]
-
-          Footer.footer [ ]
-                [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                    [ safeComponents ] ]
-         ]
+        
+            Footer.footer [] [
+                Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
+                    safeComponents
+                ]
+            ]
+        ]
 
 #if DEBUG
 open Elmish.Debug
