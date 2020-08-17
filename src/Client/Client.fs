@@ -346,8 +346,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let cy = ((car.horsepower - rangeY.minimum) / rangeY.size) * (float height)
 
                 //printf "%A %A" cx c
+                match car.origin with
+                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                | _ ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
 
-                circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
                 )
 
           let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
