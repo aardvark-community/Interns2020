@@ -347,10 +347,10 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 //printf "%A %A" cx c
                 match car.origin with
-                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
-                | _ ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; SVGAttr.Fill "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + ";  Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
+                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; SVGAttr.Fill "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
+                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; SVGAttr.Fill "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
+                | _ ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; SVGAttr.Fill "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
 
                 )
 
