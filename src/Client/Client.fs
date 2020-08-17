@@ -46,6 +46,7 @@ type Model =
         rangeMpg    : Domain
         rangeCy     : Domain
         rangeHp     : Domain
+        rangeEd     : Domain
         hoverText   : string
     }
 
@@ -89,7 +90,13 @@ let init () : Model * Cmd<Msg> =
                     minimum = 0.0
                     size = 0.0
                 }
-            hoverText = "bla"
+            rangeEd =
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+            hoverText = "lala"
         }
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
@@ -194,6 +201,15 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 }
                 range
 
+            let rangeEd =
+                let cylinders = newCars |> List.map (fun car -> car.cylinders)
+                let range = {
+                    minimum = (cylinders |> List.min)//  - float 1
+                    maximum = (cylinders |> List.max)//  + float 1
+                    size = (cylinders |> List.max) - (cylinders |> List.min)
+                }
+                range
+
             let gCars = newCars |> List.groupBy (fun car -> car.brand)
 
             let head2 =
@@ -240,7 +256,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
 
 
-            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangeCy = rangeCy;}
+            let m = {currentModel with cars = newCars; attributes = newHead; footer = foot; attributes2 = head2; groupedCars = groupedCars; rangeMpg = rangeMpg; rangeHp = rangeHp; rangeCy = rangeCy; rangeEd = rangeEd;}
             m, Cmd.none
 
     | Some counter, Decrement ->
@@ -264,6 +280,11 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                         maximum = 0.0
                         size = 0.0}
                 rangeCy =
+                    {
+                        minimum = 0.0
+                        maximum = 0.0
+                        size = 0.0}
+                rangeEd =
                     {
                         minimum = 0.0
                         maximum = 0.0
@@ -330,6 +351,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
           let rangeMpg = model.rangeMpg
           let rangeHp = model.rangeHp
           let rangeCy = model.rangeCy
+          let rangeEd = model.rangeEd
 
           // printfn "%A" rangeMpg.minimum
           // printfn "%A" rangeMpg.maximum
@@ -347,17 +369,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 //printf "%A %A" cx c
                 match car.origin with
-                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; SVGAttr.Fill "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + ";  Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
-                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; SVGAttr.Fill "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
-                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; SVGAttr.Fill "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
-                | _ ->  circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; SVGAttr.Fill "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText (car.brand + car.name + "; Miles per gallon: " + string car.mpg + "; Horsepower: " + string car.horsepower)))][]
+                |"1.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Blue"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                |"2.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Green"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                |"3.0000" ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Red"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
+                | _ ->  circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.FillOpacity 0.3; SVGAttr.Stroke "Yellow"; OnMouseOver (fun _ -> dispatch (SetHoverText car.name))][]
 
                 )
 
           let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
           let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
 
-          let circleLine = lineX :: circles rangeMpg rangeHp
+          let circleLine = lineX :: circles rangeMpg rangeEd
           let fcircleLine = lineY :: circleLine
 
           Container.container [] [
