@@ -308,6 +308,11 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
           let rangeMpg = model.rangeMpg
           let rangeHp = model.rangeHp
+          let rangeMpg = model.rangeMpg
+          let rangeMpg = model.rangeMpg
+          let rangeMpg = model.rangeMpg
+          let rangeMpg = model.rangeMpg
+          let rangeMpg = model.rangeMpg
 
           printfn "%A" rangeMpg.minimum
           printfn "%A" rangeMpg.maximum
@@ -315,19 +320,28 @@ let view (model : Model) (dispatch : Msg -> unit) =
           printfn "%A" rangeHp.minimum
           printfn "%A" rangeHp.maximum
 
-          let circles =
+
+
+          let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
             model.cars
             |> List.map (fun car -> 
-                let cx = ((car.mpg - rangeMpg.minimum) / rangeMpg.size) * (float width)
-                let cy = ((car.horsepower - rangeHp.minimum) / rangeHp.size) * (float height)
+                let cx = ((car.mpg - rangeX.minimum) / rangeX.size) * (float width)
+                let cy = ((car.horsepower - rangeY.minimum) / rangeY.size) * (float height)
 
-                printf "%A %A" cx cy
+                //printf "%A %A" cx cy
 
                 circle [Cx cx; Cy (float height-cy); R "3"; SVGAttr.FillOpacity 0.3][]
                 )
 
+
+          
+
+        
           Container.container [] [
-            svg [SVGAttr.Width width; SVGAttr.Height height] circles
+            table [] [
+
+            ]
+            svg [SVGAttr.Width width; SVGAttr.Height height] (circles rangeMpg rangeHp)
           ]
 
           Container.container []
