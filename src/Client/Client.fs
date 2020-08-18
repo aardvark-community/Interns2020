@@ -46,6 +46,10 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         printfn "loading csv"
         let cars,header = Cars.Parser.parse data
 
+        let header =
+            let l,r = List.splitAt 3 header
+            l @ ["L/100km"] @ r
+
         let rangeMpg =
             let mpg = cars |> List.map (fun car -> car.mpg)
             let range = {

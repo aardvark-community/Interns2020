@@ -53,7 +53,7 @@ module Car =
             car.brand
             car.name
             string car.mpg
-            string car.lphundertkm
+            sprintf "%.1f" car.lphundertkm
             string car.cylinders
             string car.engineDisplacement
             string car.horsepower
