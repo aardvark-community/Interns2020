@@ -77,6 +77,10 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
+        let carGroups = cars |> List.groupBy (fun car -> car.origin)
+
+        
+
         let currentModel =
             {
                 currentModel with
@@ -248,6 +252,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (width /2)
                         height
                         0.0
+                        (model.hoverText = car.name)
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
 
@@ -263,6 +268,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (width /2)
                         height
                         580.0
+                        (model.hoverText = car.name)
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
             //let circles : list<ReactElement> = []

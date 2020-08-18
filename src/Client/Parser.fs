@@ -19,7 +19,7 @@ module Parser =
             car.brand              = ""            ||
             car.name               = ""            ||
             car.mpg                |> Double.IsNaN ||
-            car.lphundertkm                |> Double.IsNaN ||
+            car.lphundertkm        |> Double.IsNaN ||
             car.cylinders          |> Double.IsNaN ||
             car.engineDisplacement |> Double.IsNaN ||
             car.horsepower         |> Double.IsNaN ||
