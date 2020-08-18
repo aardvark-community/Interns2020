@@ -26,7 +26,7 @@ let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    
+
     let loadCountCmd =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
@@ -44,7 +44,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Some data, LoadCsv ->
 
         printfn "loading csv"
-        let cars,header = Cars.Parser.parse data        
+        let cars,header = Cars.Parser.parse data
 
         let rangeMpg =
             let mpg = cars |> List.map (fun car -> car.mpg)
@@ -64,17 +64,27 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
+        let rangelphundertkm =
+            let lphundertkm = cars |> List.map (fun car -> car.lphundertkm)
+            let range = {
+                minimum = (lphundertkm |> List.min)//  - float 1
+                maximum = (lphundertkm |> List.max)//  + float 1
+                size = (lphundertkm |> List.max) - (lphundertkm |> List.min)
+            }
+            range
+
         let currentModel =
             {
                 currentModel with
-                    cars       = cars
-                    attributes = header
-                    rangeMpg   = rangeMpg
-                    rangeHp    = rangeHp
+                    cars                = cars
+                    attributes          = header
+                    rangeMpg            = rangeMpg
+                    rangeLphundertkm    = rangelphundertkm
+                    rangeHp             = rangeHp
             }
 
         currentModel, Cmd.none
-      
+
             //let rangeCy =
             //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
             //    let range = {
@@ -157,7 +167,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         currentModel, Cmd.none
     | _, InitialCountLoaded data ->
         let nextModel = { Model.initialModel with rawData = Some data }
-      
+
         printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
@@ -211,19 +221,19 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         [ str "Melihs und Sofies Daten-Visualiser!" ]
                     ]
                 ]
-        
+
             div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
 
             let height = 700
             let cy = 50
             let width = 1080
-        
+
             let rangeMpg = model.rangeMpg
-            let rangeHp = model.rangeHp                    
-                    
+            let rangeHp = model.rangeHp
+
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
-                |> List.map (fun car ->                
+                |> List.map (fun car ->
                     Cars.Visualization.circle
                         car
                         (fun car -> car.mpg)
@@ -234,62 +244,62 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         height
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
-        
+
             //let circles : list<ReactElement> = []
-        
+
             let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
-        
+
             let circleLine = lineX :: circles rangeMpg rangeHp
             let fcircleLine = lineY :: circleLine
-        
+
             Container.container [] [
                 svg [SVGAttr.Width width; SVGAttr.Height height] fcircleLine
             ]
-        
+
             Container.container [] [
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
                     [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
-                
+
                 let header2 =
                     model.attributes2
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-        
+
                 //let carNames =
                     //model.cars
                      //|> List.filter (fun c -> c.name.StartsWith("a"))
                     // |> List.sortBy (fun car -> car.name)
                     // |> List.map (fun car -> li[][str car.name])
-        
+
                 let footer =
                     model.footer
                     |> List.map (fun x -> td[Style [Padding "10px"; BackgroundColor "#888888"; Color "#ffffff"]][x |> str])
-        
+
                 let header =
                     model.attributes
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-        
+
                 let carToUl (l : list<Car>) : ReactElement =
                     let l2 = l |> List.map (fun car -> li [] [str car.name])
                     td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
-        
+
                 let cars2 =
                     model.groupedCars
                     |> List.map (carToUl)
-        
+
                 let stringifiedCars =
                     model.cars
                     |> List.map(fun c -> Cars.Car.stringify c)
-        
+
                 let tableRows =
                     stringifiedCars
                     |> List.mapi (fun i c ->
                         Cars.Visualization.carToRow i c (fun _ -> dispatch (SetHoverText "brrr"))
                     )
-        
+
                 table [] [
                     thead [] [
                         tr [] header
@@ -299,7 +309,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         tr [] footer
                     ]
                 ]
-        
+
                 table [] [
                     thead [] [
                         tr [] header2
@@ -310,7 +320,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 ]
                 //ul [] carNames
             ]
-        
+
             Footer.footer [] [
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
                     safeComponents
