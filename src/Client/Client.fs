@@ -224,12 +224,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
 
-            let height = 700
-            let cy = 50
+            let height = 500
+            // let cy = 50
             let width = 1080
 
             let rangeMpg = model.rangeMpg
             let rangeHp = model.rangeHp
+            let rangeLphundertkm = model.rangeLphundertkm
 
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
@@ -240,21 +241,46 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (rangeX)
                         (fun car -> car.horsepower)
                         (rangeY)
-                        width
+                        (width /2)
                         height
+                        0.0
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
 
+            let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
+                model.cars
+                |> List.map (fun car ->
+                    Cars.Visualization.circle
+                        car
+                        (fun car -> car.lphundertkm)
+                        (rangeX)
+                        (fun car -> car.horsepower)
+                        (rangeY)
+                        (width /2)
+                        height
+                        580.0
+                        (fun _ -> dispatch (SetHoverText car.name))
+                )
             //let circles : list<ReactElement> = []
 
-            let lineX = line[X1 0; Y1 700; X2 1080; Y2 700; Style [Stroke "black"]] []
-            let lineY = line[X1 0; Y1 700; X2 0; Y2 0; Style [Stroke "black"]] []
+            let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
+            let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
 
             let circleLine = lineX :: circles rangeMpg rangeHp
             let fcircleLine = lineY :: circleLine
 
+            let lineX1 = line[X1 580; Y1 500; X2 1080; Y2 500; Style [Stroke "black"]] []
+            let lineY1 = line[X1 580; Y1 500; X2 580; Y2 0; Style [Stroke "black"]] []
+
+            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
+            let fcircleLine1 = lineY1 :: circleLine1
+
+            let scatterplots =  [fcircleLine;fcircleLine1]
+
+            let finalCircles = List.concat scatterplots
+
             Container.container [] [
-                svg [SVGAttr.Width width; SVGAttr.Height height] fcircleLine
+                svg [SVGAttr.Width width; SVGAttr.Height height] finalCircles
             ]
 
             Container.container [] [

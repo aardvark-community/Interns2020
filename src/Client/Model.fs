@@ -12,6 +12,7 @@ type Car = {
     brand              : string
     name               : string
     mpg                : float
+    lphundertkm        : float
     cylinders          : float
     engineDisplacement : float
     horsepower         : float //int
@@ -32,17 +33,18 @@ type Domain = {
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
 type Model = {
-    rawData     : option<string>
-    cars        : list<Car>
-    attributes  : list<String>
-    footer      : list<String>
-    attributes2 : list<String>
-    groupedCars : list<list<Car>>
-    rangeMpg    : Domain
-    rangeCy     : Domain
-    rangeHp     : Domain
-    rangeEd     : Domain
-    hoverText   : string
+    rawData             : option<string>
+    cars                : list<Car>
+    attributes          : list<String>
+    footer              : list<String>
+    attributes2         : list<String>
+    groupedCars         : list<list<Car>>
+    rangeMpg            : Domain
+    rangeCy             : Domain
+    rangeHp             : Domain
+    rangeEd             : Domain
+    rangeLphundertkm    : Domain
+    hoverText           : string
 }
 
 module Car =
@@ -51,6 +53,7 @@ module Car =
             car.brand
             car.name
             string car.mpg
+            string car.lphundertkm
             string car.cylinders
             string car.engineDisplacement
             string car.horsepower
@@ -60,10 +63,10 @@ module Car =
             car.origin.ToString()
         ]
 
-module Model = 
-    
-    
-    
+module Model =
+
+
+
 
     let initialModel =
         {
@@ -92,6 +95,12 @@ module Model =
                     size = 0.0
                 }
             rangeEd =
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+            rangeLphundertkm =
                 {
                     maximum = 0.0
                     minimum = 0.0

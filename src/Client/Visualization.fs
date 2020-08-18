@@ -7,8 +7,8 @@ open Cars
 
 module Visualization =
 
-    let circle (car: Car) (x : Car -> float) (rangeX : Domain) (y : Cars.Car -> float) (rangeY : Domain) width height (dispatch) : ReactElement =
-        let cx = ((x car - rangeX.minimum) / rangeX.size) * (float width)
+    let circle (car: Car) (x : Car -> float) (rangeX : Domain) (y : Cars.Car -> float) (rangeY : Domain) width height offsetX (dispatch) : ReactElement =
+        let cx = (((x car - rangeX.minimum) / rangeX.size) * (float width)) + offsetX
         let cy = ((y car - rangeY.minimum) / rangeY.size) * (float height)
 
         match car.origin with
