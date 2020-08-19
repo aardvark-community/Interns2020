@@ -77,9 +77,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
-        let carGroups = cars |> List.groupBy (fun car -> car.origin)
-
+        let groups = cars |> List.groupBy (fun car -> car.origin)
         
+
 
         let currentModel =
             {
@@ -326,14 +326,16 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.groupedCars
                     |> List.map (carToUl)
 
-                let stringifiedCars =
-                    model.cars
-                    |> List.map(fun c -> Cars.Car.stringify c)
+                // let stringifiedCars =
+                //     model.cars
+                //     |> List.map(Cars.Car.stringify)
 
                 let tableRows =
-                    stringifiedCars
-                    |> List.mapi (fun i c ->
-                        Cars.Visualization.carToRow i c (fun _ -> dispatch (SetHoverText "brrr"))
+                    model.cars
+                    |> List.mapi (fun i car ->
+                        let c = Cars.Car.stringify car
+                        let isHovered = (model.hoverText = car.name)
+                        Cars.Visualization.carToRow i c isHovered (fun _ -> dispatch (SetHoverText car.name))
                     )
 
                 table [] [

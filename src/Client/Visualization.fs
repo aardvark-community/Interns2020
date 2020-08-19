@@ -24,13 +24,21 @@ module Visualization =
         | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "Grey"; OnMouseOver dispatch][]
 
+    let rect (input : (Origin * list<Car>)) index width height : ReactElement = failwith""
+        
     
-    
-    let carToRow i (c : list<string>) (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =
+    let carToRow i (c : list<string>) isHovered (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =
         let tds =
             c |> List.map (fun x -> td[Style [Padding "10px"]; OnMouseOver dispatch][str x])
 
-        tr [ if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]] tds
+        let rowStyle = 
+
+            if isHovered then
+                Style [BackgroundColor "#ff0000"]
+            else 
+                if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]
+
+        tr [rowStyle] tds
 
     //let circles (input : list<Car>) : list<ReactElement> = failwith ""
 
