@@ -79,6 +79,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
         let groups = cars |> List.groupBy (fun car -> car.origin)
         
+        let gCars = cars |> List.groupBy (fun car -> car.brand)
+
 
 
         let currentModel =
@@ -86,6 +88,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 currentModel with
                     cars                = cars
                     attributes          = header
+                    groupedCars         = gCars
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
@@ -111,14 +114,6 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             //        size = (cylinders |> List.max) - (cylinders |> List.min)
             //    }
             //    range
-
-            //let gCars = newCars |> List.groupBy (fun car -> car.brand)
-
-            //let head2 =
-            //    gCars |> List.map (fst)
-
-            //let groupedCars =
-            //    gCars |> List.map (snd)
 
             //let carMpg =
             //    newCars
@@ -233,7 +228,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
 
-            let height = 500
+            let height = 700
             // let cy = 50
             let width = 1080
 
@@ -274,17 +269,18 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 )
             
             let rects =
-                let cars = model.carGroups |> List.map (snd)
+                let cars = model.groupedCars |> List.map (snd)
                 let count = cars |> List.map (List.length)
                 let max = count |> List.max
-                model.carGroups
+                model.groupedCars
                 |> List.mapi (fun i x ->
                     Cars.Visualization.rect
                         x
+                        (List.length count)
                         max
                         i
-                        540
-                        540
+                        width
+                        height
                         )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
@@ -299,11 +295,11 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let scatterplots = [rects; fcircleLine]
+            //let scatterplots = [rects; fcircleLine]
 
             //let scatterplots =  [fcircleLine;fcircleLine1]
 
-            let finalCircles = List.concat scatterplots
+            //let finalCircles = List.concat scatterplots
 
             Container.container [] [
                 svg [SVGAttr.Width width; SVGAttr.Height height] rects
@@ -334,13 +330,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.attributes
                     |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
 
-                let carToUl (l : list<Car>) : ReactElement =
-                    let l2 = l |> List.map (fun car -> li [] [str car.name])
-                    td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
+                // let carToUl (l : list<Car>) : ReactElement =
+                //     let l2 = l |> List.map (fun car -> li [] [str car.name])
+                //     td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
 
-                let cars2 =
-                    model.groupedCars
-                    |> List.map (carToUl)
+                // let cars2 =
+                //     model.groupedCars
+                //     |> List.map (carToUl)
 
                 // let stringifiedCars =
                 //     model.cars
@@ -364,14 +360,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-                table [] [
-                    thead [] [
-                        tr [] header2
-                    ]
-                    tbody [] [
-                        tr [] cars2
-                    ]
-                ]
+                // table [] [
+                //     thead [] [
+                //         tr [] header2
+                //     ]
+                //     tbody [] [
+                //         tr [] cars2
+                //     ]
+                // ]
                 //ul [] carNames
             ]
 

@@ -38,7 +38,7 @@ type Model = {
     attributes          : list<String>
     footer              : list<String>
     attributes2         : list<String>
-    groupedCars         : list<list<Car>>
+    groupedCars         : list<string * list<Car>>
     rangeMpg            : Domain
     rangeCy             : Domain
     rangeHp             : Domain
