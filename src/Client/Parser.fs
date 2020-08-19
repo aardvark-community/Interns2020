@@ -48,6 +48,7 @@ module Parser =
         let name = carName.Substring(index)
 
         let output = {
+            id                 = System.Guid.NewGuid()
             brand              = brand
             name               = name
             mpg                = attr.[1] |> tryParse

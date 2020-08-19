@@ -20,7 +20,9 @@ type Msg =
     | LoadCsv
     | Decrement
     | InitialCountLoaded of string
-    | SetHoverText of string
+    //| SetHoverText of string
+    | HoverEnter of Guid
+    | HoverLeave
 
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
@@ -39,8 +41,10 @@ let init () : Model * Cmd<Msg> =
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
-    | _, SetHoverText t ->
-        { currentModel with hoverText = t }, Cmd.none
+    | _, HoverEnter t ->
+        { currentModel with hoveredCarId = Some t }, Cmd.none
+    | _, HoverLeave ->
+        { currentModel with hoveredCarId = None}, Cmd.none
     | Some data, LoadCsv ->
 
         printfn "loading csv"
@@ -226,15 +230,25 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str model.hoverText ]
+            let input = 
+                model.hoveredCarId 
+                |> Option.map (string)
+                |> Option.defaultValue ("")
 
-            let height = 700
+            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str input ]
+
+            let height = 500
             // let cy = 50
             let width = 1080
 
             let rangeMpg = model.rangeMpg
             let rangeHp = model.rangeHp
             let rangeLphundertkm = model.rangeLphundertkm
+
+            let isHovered (car : Car) =
+                match model.hoveredCarId with
+                | Some hCar when hCar = car.id -> true
+                | _ -> false
 
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
@@ -248,8 +262,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (width /2)
                         height
                         0.0
-                        (model.hoverText = car.name)
-                        (fun _ -> dispatch (SetHoverText car.name))
+                        (isHovered car)
+                        (fun _ -> dispatch (HoverEnter car.id))
                 )
 
             let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
@@ -264,8 +278,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (width /2)
                         height
                         580.0
-                        (model.hoverText = car.name)
-                        (fun _ -> dispatch (SetHoverText car.name))
+                        (isHovered car)
+                        (fun _ -> dispatch (HoverEnter car.id))
                 )
 
             let tryMax xs =
@@ -307,14 +321,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            //let scatterplots = [rects; fcircleLine]
+            
 
-            //let scatterplots =  [fcircleLine;fcircleLine1]
+            let scatterplots =  [fcircleLine;fcircleLine1]
 
-            //let finalCircles = List.concat scatterplots
+            let finalCircles = List.concat scatterplots
 
             Container.container [] [
-                svg [SVGAttr.Width width; SVGAttr.Height height] rects
+                svg [SVGAttr.Width width; SVGAttr.Height height] finalCircles
             ]
 
             Container.container [] [
@@ -358,8 +372,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.cars
                     |> List.mapi (fun i car ->
                         let c = Cars.Car.stringify car
-                        let isHovered = (model.hoverText = car.name)
-                        Cars.Visualization.carToRow i c isHovered (fun _ -> dispatch (SetHoverText car.name))
+                        Cars.Visualization.carToRow i c (isHovered car) (fun _ -> dispatch (HoverEnter car.id))
                     )
 
                 table [] [

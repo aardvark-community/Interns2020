@@ -9,6 +9,7 @@ type Origin =
 | Other
 
 type Car = {
+    id                 : System.Guid
     brand              : string
     name               : string
     mpg                : float
@@ -44,7 +45,7 @@ type Model = {
     rangeHp             : Domain
     rangeEd             : Domain
     rangeLphundertkm    : Domain
-    hoverText           : string
+    hoveredCarId        : option<Guid>
     carGroups           : list<Origin * list<Car>>
 }
 
@@ -107,7 +108,7 @@ module Model =
                     minimum = 0.0
                     size = 0.0
                 }
-            hoverText = "lala"
+            hoveredCarId = None
             carGroups = []
         }
 
