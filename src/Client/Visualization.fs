@@ -24,7 +24,19 @@ module Visualization =
         | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "Grey"; OnMouseOver dispatch][]
 
-    let rect (input : (Origin * list<Car>)) index width height : ReactElement = failwith""
+    let rect (input : (Origin * list<Car>)) (max : int) (index : int) (width : int) (height : int) : ReactElement =
+        
+        let x = (width/3)
+        let offset = x * index
+        let origin = fst input
+        let cars = (snd input) |> List.length
+        let y = (height/max) * cars
+
+        match origin with
+        | USA    -> rect [X offset; Y y; SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []
+        | Europe -> rect [X offset; Y y; SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#33a02c";] []
+        | Asia   -> rect [X offset; Y y; SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#e31a1c"] []
+        | _      -> rect [X offset; Y y; SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "Grey"] []
         
     
     let carToRow i (c : list<string>) isHovered (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =

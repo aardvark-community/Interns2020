@@ -89,6 +89,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
+                    carGroups           = groups           
             }
 
         currentModel, Cmd.none
@@ -271,7 +272,20 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (model.hoverText = car.name)
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
-            //let circles : list<ReactElement> = []
+            
+            let rects =
+                let cars = model.carGroups |> List.map (snd)
+                let count = cars |> List.map (List.length)
+                let max = count |> List.max
+                model.carGroups
+                |> List.mapi (fun i x ->
+                    Cars.Visualization.rect
+                        x
+                        max
+                        i
+                        540
+                        540
+                        )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
@@ -285,12 +299,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let scatterplots =  [fcircleLine;fcircleLine1]
+            let scatterplots = [rects; fcircleLine]
+
+            //let scatterplots =  [fcircleLine;fcircleLine1]
 
             let finalCircles = List.concat scatterplots
 
             Container.container [] [
-                svg [SVGAttr.Width width; SVGAttr.Height height] finalCircles
+                svg [SVGAttr.Width width; SVGAttr.Height height] rects
             ]
 
             Container.container [] [

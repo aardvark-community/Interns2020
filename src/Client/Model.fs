@@ -45,6 +45,7 @@ type Model = {
     rangeEd             : Domain
     rangeLphundertkm    : Domain
     hoverText           : string
+    carGroups           : list<Origin * list<Car>>
 }
 
 module Car =
@@ -107,5 +108,6 @@ module Model =
                     size = 0.0
                 }
             hoverText = "lala"
+            carGroups = []
         }
 
