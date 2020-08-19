@@ -11,11 +11,11 @@ module Visualization =
         let cx = (((x car - rangeX.minimum) / rangeX.size) * (float width)) + offsetX
         let cy = ((y car - rangeY.minimum) / rangeY.size) * (float height)
 
-        let strokeStyle = 
+        let strokeStyle =
 
             if isHovered then
                 SVGAttr.StrokeWidth "2"
-            else 
+            else
                 SVGAttr.StrokeWidth "0"
 
         match car.origin with
@@ -25,7 +25,7 @@ module Visualization =
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "Grey"; OnMouseOver dispatch][]
 
     let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) : ReactElement =
-        
+
         let x = (width/count)
         let offset = x * index
         let origin = fst input
@@ -39,17 +39,17 @@ module Visualization =
         // | Europe -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#33a02c";] []
         // | Asia   -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#e31a1c"] []
         // | _      -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "Grey"] []
-        
-    
+
+
     let carToRow i (c : list<string>) isHovered (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =
         let tds =
             c |> List.map (fun x -> td[Style [Padding "10px"]; OnMouseOver dispatch][str x])
 
-        let rowStyle = 
+        let rowStyle =
 
             if isHovered then
                 Style [BackgroundColor "#ff0000"]
-            else 
+            else
                 if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]
 
         tr [rowStyle] tds

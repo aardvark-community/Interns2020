@@ -78,7 +78,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             range
 
         let groups = cars |> List.groupBy (fun car -> car.origin)
-        
+
         let gCars = cars |> List.groupBy (fun car -> car.brand)
 
 
@@ -92,7 +92,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
-                    carGroups           = groups           
+                    carGroups           = groups
             }
 
         currentModel, Cmd.none
@@ -267,21 +267,33 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (model.hoverText = car.name)
                         (fun _ -> dispatch (SetHoverText car.name))
                 )
-            
+
+            let tryMax xs =
+              if Seq.isEmpty xs
+              then
+                None
+              else
+                Seq.max xs |> Some
+
             let rects =
                 let cars = model.groupedCars |> List.map (snd)
                 let count = cars |> List.map (List.length)
-                let max = count |> List.max
-                model.groupedCars
-                |> List.mapi (fun i x ->
-                    Cars.Visualization.rect
-                        x
-                        (List.length count)
-                        max
-                        i
-                        width
-                        height
-                        )
+                let max = count |> tryMax
+
+                match max with
+                |None -> []
+                | _ ->
+                    let newMax = count |> List.max
+                    model.groupedCars
+                    |> List.mapi (fun i x ->
+                        Cars.Visualization.rect
+                            x
+                            (List.length count)
+                            newMax
+                            i
+                            width
+                            height
+                            )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
