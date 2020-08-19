@@ -82,8 +82,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             range
 
         let groups = cars |> List.groupBy (fun car -> car.origin)
-
+        
         let gCars = cars |> List.groupBy (fun car -> car.brand)
+        let sortedCars = gCars |> List.sortBy (fun x -> (snd x) |> List.length)
 
 
 
@@ -92,7 +93,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                 currentModel with
                     cars                = cars
                     attributes          = header
-                    groupedCars         = gCars
+                    groupedCars         = sortedCars
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
@@ -237,7 +238,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str input ]
 
-            let height = 500
+            let height = 1000
             // let cy = 50
             let width = 1080
 
@@ -260,7 +261,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (fun car -> car.horsepower)
                         (rangeY)
                         (width /2)
-                        height
+                        (height/2)
                         0.0
                         (isHovered car)
                         (fun _ -> dispatch (HoverEnter car.id))
@@ -276,7 +277,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (fun car -> car.horsepower)
                         (rangeY)
                         (width /2)
-                        height
+                        (height/2)
                         580.0
                         (isHovered car)
                         (fun _ -> dispatch (HoverEnter car.id))
@@ -306,7 +307,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             newMax
                             i
                             width
-                            height
+                            (height/2)
+                            (height/2)
                             )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
@@ -321,14 +323,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            
-
             let scatterplots =  [fcircleLine;fcircleLine1]
 
             let finalCircles = List.concat scatterplots
 
+            let svgContent = [finalCircles;rects] |> List.concat
+
             Container.container [] [
-                svg [SVGAttr.Width width; SVGAttr.Height height] finalCircles
+                svg [SVGAttr.Width width; SVGAttr.Height height] svgContent
             ]
 
             Container.container [] [

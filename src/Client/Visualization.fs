@@ -24,7 +24,7 @@ module Visualization =
         | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "Grey"; OnMouseOver dispatch][]
 
-    let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) : ReactElement =
+    let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) : ReactElement =
 
         let x = (width/count)
         let offset = x * index
@@ -32,7 +32,7 @@ module Visualization =
         let cars = (snd input) |> List.length
         let y = (height/max) * cars
 
-        rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []
+        rect [X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []
 
         // match origin with
         // | USA    -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []
