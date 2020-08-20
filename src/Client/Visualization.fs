@@ -24,7 +24,7 @@ module Visualization =
         | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "Grey"; OnMouseOver dispatch][]
 
-    let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (hoveredItems : Set<System.Guid>) (isHovered : bool) (dispatch) : ReactElement =
+    let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (dispatch) : ReactElement =
 
         let x = (width/count)
         let offset = x * index
@@ -34,16 +34,17 @@ module Visualization =
 
         
 
-        let rectStyle =
+        let rectStyle : list<IProp> =
 
-            if isHovered then
-                SVGAttr.Fill "#5fb8f4"
-            else
-                SVGAttr.Fill "#1f78b4"
+            let (hovered, partly) = isHovered
+            match hovered, partly with
+            |true, _ -> [SVGAttr.Fill "#5fb8f4"]
+            |false, true -> [SVGAttr.StrokeWidth "2"; SVGAttr.Stroke "black"; SVGAttr.Fill "#1f78b4"]
+            |false, false -> [SVGAttr.Fill "#1f78b4"]
 
             
 
-        rect [X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; rectStyle; OnMouseOver dispatch] []
+        rect ([X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; OnMouseOver dispatch] @ rectStyle) []
 
         // match origin with
         // | USA    -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []

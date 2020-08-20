@@ -254,9 +254,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let isHovered (car : Car) =
                 model.hoveredItems.Contains (car.id)
 
-            let isHoveredRect (cars : list<Car>) =
+            let isHoveredRect (cars : list<Car>) : bool * bool=
                 let guids = cars |> List.map (fun car -> car.id)
-                model.hoveredItems = Set.ofList guids
+                let currentSet = Set.ofList guids
+                let isHovered = model.hoveredItems = currentSet
+                let isPartly = model.hoveredItems |> Set.isSuperset currentSet
+                isHovered, isPartly
+
 
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
@@ -308,7 +312,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     let newMax = count |> List.max
                     model.groupedCars
                     |> List.mapi (fun i x ->
-                        let hovered = x |> snd |> List.map (fun car -> car.id)
+                        let hovered = x |> snd |> List.map (fun car -> car.id) 
                         Cars.Visualization.rect
                             x
                             (List.length count)
@@ -317,7 +321,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             width
                             (height/2)
                             (height/2)
-                            model.hoveredItems
                             (isHoveredRect (snd x))
                             (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
                             )
