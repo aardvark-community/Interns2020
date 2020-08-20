@@ -45,7 +45,8 @@ type Model = {
     rangeHp             : Domain
     rangeEd             : Domain
     rangeLphundertkm    : Domain
-    hoveredCarId        : option<Guid>
+    //hoveredCarId        : option<Guid>
+    hoveredItems        : Set<Guid>
     carGroups           : list<Origin * list<Car>>
 }
 
@@ -108,7 +109,8 @@ module Model =
                     minimum = 0.0
                     size = 0.0
                 }
-            hoveredCarId = None
+            //hoveredCarId = None
+            hoveredItems = Set.empty
             carGroups = []
         }
 

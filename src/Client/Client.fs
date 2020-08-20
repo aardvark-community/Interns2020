@@ -21,8 +21,8 @@ type Msg =
     | Decrement
     | InitialCountLoaded of string
     //| SetHoverText of string
-    | HoverEnter of Guid
-    | HoverLeave
+    | SelectCars of Set<Guid>
+    | Deselect
 
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
 
@@ -41,10 +41,10 @@ let init () : Model * Cmd<Msg> =
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
-    | _, HoverEnter t ->
-        { currentModel with hoveredCarId = Some t }, Cmd.none
-    | _, HoverLeave ->
-        { currentModel with hoveredCarId = None}, Cmd.none
+    | _, SelectCars t ->
+        { currentModel with hoveredItems = t }, Cmd.none
+    | _, Deselect ->
+        { currentModel with hoveredItems = Set.empty}, Cmd.none
     | Some data, LoadCsv ->
 
         printfn "loading csv"
@@ -84,7 +84,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         let groups = cars |> List.groupBy (fun car -> car.origin)
         
         let gCars = cars |> List.groupBy (fun car -> car.brand)
-        let sortedCars = gCars |> List.sortBy (fun x -> (snd x) |> List.length)
+        let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
 
 
 
@@ -231,12 +231,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-            let input = 
-                model.hoveredCarId 
-                |> Option.map (string)
-                |> Option.defaultValue ("")
+            // let input = 
+            //     model.hoveredCarId 
+            //     |> Option.map (string)
+            //     |> Option.defaultValue ("")
 
-            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str input ]
+            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str (string model.hoveredItems) ]
 
             let height = 1000
             // let cy = 50
@@ -246,10 +246,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let rangeHp = model.rangeHp
             let rangeLphundertkm = model.rangeLphundertkm
 
+            // let isHovered (car : Car) =
+            //     match model.hoveredCarId with
+            //     | Some hCar when hCar = car.id -> true
+            //     | _ -> false
+
             let isHovered (car : Car) =
-                match model.hoveredCarId with
-                | Some hCar when hCar = car.id -> true
-                | _ -> false
+                model.hoveredItems.Contains (car.id)
+
+            let isHoveredRect (cars : list<Car>) =
+                let guids = cars |> List.map (fun car -> car.id)
+                model.hoveredItems = Set.ofList guids
 
             let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
                 model.cars
@@ -264,7 +271,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (height/2)
                         0.0
                         (isHovered car)
-                        (fun _ -> dispatch (HoverEnter car.id))
+                        (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
                 )
 
             let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
@@ -280,7 +287,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (height/2)
                         580.0
                         (isHovered car)
-                        (fun _ -> dispatch (HoverEnter car.id))
+                        (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
                 )
 
             let tryMax xs =
@@ -301,6 +308,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     let newMax = count |> List.max
                     model.groupedCars
                     |> List.mapi (fun i x ->
+                        let hovered = x |> snd |> List.map (fun car -> car.id)
                         Cars.Visualization.rect
                             x
                             (List.length count)
@@ -309,6 +317,9 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             width
                             (height/2)
                             (height/2)
+                            model.hoveredItems
+                            (isHoveredRect (snd x))
+                            (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
                             )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
@@ -374,7 +385,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.cars
                     |> List.mapi (fun i car ->
                         let c = Cars.Car.stringify car
-                        Cars.Visualization.carToRow i c (isHovered car) (fun _ -> dispatch (HoverEnter car.id))
+                        Cars.Visualization.carToRow i c (isHovered car) (fun _ -> dispatch (SelectCars (Set.ofList [car.id])))
                     )
 
                 table [] [
