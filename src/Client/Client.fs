@@ -247,7 +247,21 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 |> List.map (fun car -> (car.id, car)) 
                 |> Map.ofList
 
-            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str ""]
+            let hoverDetail =
+                let setCount = model.hoveredItems |> Set.count
+                match setCount with
+                |0 -> ""
+                |1 -> 
+                    let car = model.hoveredItems |> Set.toList |> List.head
+                    let result = string (carMap |> Map.find car)
+                    result
+                |_ ->
+                    let car = model.hoveredItems |> Set.toList |> List.head
+                    let brand = (carMap |> Map.find car).brand
+                    let result = brand + " " + string setCount
+                    result
+
+            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str hoverDetail]
 
             let height = 1000
             // let cy = 50
