@@ -39,6 +39,7 @@ let init () : Model * Cmd<Msg> =
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
 // these commands in turn, can dispatch messages to which the update function will react.
+
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
     | _, SelectCars t ->
@@ -81,8 +82,17 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
+        let rangekw =
+            let kw = cars |> List.map (fun car -> car.kw)
+            let range = {
+                minimum = (kw |> List.min)//  - float 1
+                maximum = (kw |> List.max)//  + float 1
+                size = (kw |> List.max) - (kw |> List.min)
+            }
+            range
+
         let groups = cars |> List.groupBy (fun car -> car.origin)
-        
+
         let gCars = cars |> List.groupBy (fun car -> car.brand)
         let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
 
@@ -97,6 +107,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
+                    rangekw             = rangekw
                     carGroups           = groups
             }
 
@@ -231,12 +242,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-            // let input = 
-            //     model.hoveredCarId 
+            // let input =
+            //     model.hoveredCarId
             //     |> Option.map (string)
             //     |> Option.defaultValue ("")
 
-            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str (string model.hoveredItems) ]
+            div [ Style [FontSize "20"; Top 75; Left 0; Position PositionOptions.Fixed]] [ str "Test" ]
 
             let height = 1000
             // let cy = 50
@@ -245,6 +256,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let rangeMpg = model.rangeMpg
             let rangeHp = model.rangeHp
             let rangeLphundertkm = model.rangeLphundertkm
+            let rangekw = model.rangekw
 
             // let isHovered (car : Car) =
             //     match model.hoveredCarId with
@@ -285,7 +297,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         car
                         (fun car -> car.lphundertkm)
                         (rangeX)
-                        (fun car -> car.horsepower)
+                        (fun car -> car.kw)
                         (rangeY)
                         540
                         500
@@ -312,7 +324,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     let newMax = count |> List.max
                     model.groupedCars
                     |> List.mapi (fun i x ->
-                        let hovered = x |> snd |> List.map (fun car -> car.id) 
+                        let hovered = x |> snd |> List.map (fun car -> car.id)
                         Cars.Visualization.rect
                             x
                             (List.length count)
@@ -334,12 +346,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let lineX1 = line[X1 580; Y1 500; X2 1080; Y2 500; Style [Stroke "black"]] []
             let lineY1 = line[X1 580; Y1 500; X2 580; Y2 0; Style [Stroke "black"]] []
 
-            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
+            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangekw
             let fcircleLine1 = lineY1 :: circleLine1
 
             let text = [
                 text[X 1200; Y 100; SVGAttr.FontSize 30][
-                    tspan[X 1200; Dy 40][str "USA"] 
+                    tspan[X 1200; Dy 40][str "USA"]
                     tspan[X 1200; Dy 40][str "Asia"]
                     tspan[X 1200; Dy 40][str "Europe"]
                     tspan[X 1200; Dy 40][str "Other"]

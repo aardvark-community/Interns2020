@@ -17,6 +17,7 @@ type Car = {
     cylinders          : float
     engineDisplacement : float
     horsepower         : float //int
+    kw                 : float
     weight             : float
     acceleration       : float
     modelYear          : float //int
@@ -45,6 +46,7 @@ type Model = {
     rangeHp             : Domain
     rangeEd             : Domain
     rangeLphundertkm    : Domain
+    rangekw             : Domain
     //hoveredCarId        : option<Guid>
     hoveredItems        : Set<Guid>
     carGroups           : list<Origin * list<Car>>
@@ -60,6 +62,7 @@ module Car =
             string car.cylinders
             string car.engineDisplacement
             string car.horsepower
+            string car.kw
             string car.weight
             string car.acceleration
             string car.modelYear
@@ -104,6 +107,12 @@ module Model =
                     size = 0.0
                 }
             rangeLphundertkm =
+                {
+                    maximum = 0.0
+                    minimum = 0.0
+                    size = 0.0
+                }
+            rangekw =
                 {
                     maximum = 0.0
                     minimum = 0.0

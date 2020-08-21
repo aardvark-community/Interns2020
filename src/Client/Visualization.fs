@@ -31,7 +31,7 @@ module Visualization =
         let origin = fst input
         let cars = (snd input) |> List.length
         let y = (height/max) * cars
-        
+
 
         let rectStyle : list<IProp> =
 
@@ -41,7 +41,7 @@ module Visualization =
             |false, true -> [SVGAttr.StrokeWidth "2"; SVGAttr.Stroke "black"; SVGAttr.Fill "#1f78b4"]
             |false, false -> [SVGAttr.Fill "#1f78b4"]
 
-            
+
 
         rect ([X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; OnMouseOver dispatch] @ rectStyle) []
 

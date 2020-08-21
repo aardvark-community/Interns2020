@@ -6,6 +6,7 @@ open Cars
 module Parser =
 
     let num = 235.215
+    let num1 = 0.7457
 
     let parseOrigin (origin : float) : Origin =
         match origin with
@@ -56,6 +57,7 @@ module Parser =
             cylinders          = attr.[2] |> tryParse
             engineDisplacement = attr.[3] |> tryParse
             horsepower         = attr.[4] |> tryParse //int
+            kw                 = num1 * (attr.[4] |> tryParse)
             weight             = attr.[5] |> tryParse
             acceleration       = attr.[6] |> tryParse
             modelYear          = attr.[7] |> tryParse //int
