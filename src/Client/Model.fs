@@ -64,7 +64,7 @@ module Car =
             string car.cylinders
             string car.engineDisplacement
             string car.horsepower
-            string car.kw
+            sprintf "%.1f" car.kw
             string car.weight
             string car.acceleration
             string car.modelYear
