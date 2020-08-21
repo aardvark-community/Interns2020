@@ -85,8 +85,13 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         
         let gCars = cars |> List.groupBy (fun car -> car.brand)
         let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
-
-
+        let originLookup = 
+            gCars
+            |> List.map (fun (brand,cars) -> 
+                let origin = (cars |> List.head).origin
+                (brand,origin)
+                )
+            |> Map.ofList
 
         let currentModel =
             {
@@ -98,6 +103,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
                     carGroups           = groups
+                    originLookup        = originLookup
             }
 
         currentModel, Cmd.none
@@ -236,7 +242,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
             //     |> Option.map (string)
             //     |> Option.defaultValue ("")
 
-            div [ Style [FontSize "20"; Top 0; Left 0; Position PositionOptions.Fixed]] [ str (string model.hoveredItems) ]
+            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str (string model.hoveredItems) ]
 
             let height = 1000
             // let cy = 50
@@ -305,23 +311,24 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let cars = model.groupedCars |> List.map (snd)
                 let count = cars |> List.map (List.length)
                 let max = count |> tryMax
-
                 match max with
                 |None -> []
                 | _ ->
                     let newMax = count |> List.max
                     model.groupedCars
-                    |> List.mapi (fun i x ->
-                        let hovered = x |> snd |> List.map (fun car -> car.id) 
+                    |> List.mapi (fun i (brand,cars) ->
+                        let hovered = cars |> List.map (fun car -> car.id) 
+                        let origin = model.originLookup |> Map.find brand
                         Cars.Visualization.rect
-                            x
+                            cars
                             (List.length count)
                             newMax
                             i
                             1080
                             500
                             500
-                            (isHoveredRect (snd x))
+                            (isHoveredRect cars)
+                            origin
                             (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
                         )
 
@@ -337,17 +344,20 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let text = [
-                text[X 1200; Y 100; SVGAttr.FontSize 30][
-                    tspan[X 1200; Dy 40][str "USA"] 
-                    tspan[X 1200; Dy 40][str "Asia"]
-                    tspan[X 1200; Dy 40][str "Europe"]
-                    tspan[X 1200; Dy 40][str "Other"]
+            let text = 
+                let x = 1200
+                let y = 50
+                [
+                text[X x; Y y; SVGAttr.FontSize 30][
+                    tspan[X x; Dy 40][str "USA"] 
+                    tspan[X x; Dy 40][str "Europe"]
+                    tspan[X x; Dy 40][str "Asia"]
+                    tspan[X x; Dy 40][str "Other"]
                     ]
-                circle [Cx 1180; Cy 130; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
-                circle [Cx 1180; Cy 170; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
-                circle [Cx 1180; Cy 210; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
-                circle [Cx 1180; Cy 250; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
+                circle [Cx (x-20); Cy (y+30); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
+                circle [Cx (x-20); Cy (y+70); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
+                circle [Cx (x-20); Cy (y+110); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
+                circle [Cx (x-20); Cy (y+150); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
                 ]
 
             let svgContent = [fcircleLine;fcircleLine1;rects;text] |> List.concat

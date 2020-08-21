@@ -48,6 +48,8 @@ type Model = {
     //hoveredCarId        : option<Guid>
     hoveredItems        : Set<Guid>
     carGroups           : list<Origin * list<Car>>
+    originLookup        : Map<string,Origin>
+
 }
 
 module Car =
@@ -112,5 +114,6 @@ module Model =
             //hoveredCarId = None
             hoveredItems = Set.empty
             carGroups = []
+            originLookup = Map.empty
         }
 
