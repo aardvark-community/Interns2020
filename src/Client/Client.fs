@@ -48,11 +48,15 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Some data, LoadCsv ->
 
         printfn "loading csv"
-        let cars,header = Cars.Parser.parse data
+        let cars,header2 = Cars.Parser.parse data
 
         let header =
-            let l,r = List.splitAt 3 header
-            l @ ["L/100km"] @ r
+            let l,r = List.splitAt 3 header2
+            let tv = l @ ["L/100km"] @ r
+
+            let x,y = List.splitAt 7 tv
+            x @ ["KW"] @ y
+
 
         let rangeMpg =
             let mpg = cars |> List.map (fun car -> car.mpg)
@@ -82,12 +86,12 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             range
 
         let groups = cars |> List.groupBy (fun car -> car.origin)
-        
+
         let gCars = cars |> List.groupBy (fun car -> car.brand)
         let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
-        let originLookup = 
+        let originLookup =
             gCars
-            |> List.map (fun (brand,cars) -> 
+            |> List.map (fun (brand,cars) ->
                 let origin = (cars |> List.head).origin
                 (brand,origin)
                 )
@@ -237,14 +241,14 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-            // let input = 
-            //     model.hoveredCarId 
+            // let input =
+            //     model.hoveredCarId
             //     |> Option.map (string)
             //     |> Option.defaultValue ("")
 
-            let carMap = 
-                model.cars 
-                |> List.map (fun car -> (car.id, car)) 
+            let carMap =
+                model.cars
+                |> List.map (fun car -> (car.id, car))
                 |> Map.ofList
 
             let hoverDetail =
@@ -336,7 +340,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     let newMax = count |> List.max
                     model.groupedCars
                     |> List.mapi (fun i (brand,cars) ->
-                        let hovered = cars |> List.map (fun car -> car.id) 
+                        let hovered = cars |> List.map (fun car -> car.id)
                         let origin = model.originLookup |> Map.find brand
                         Cars.Visualization.rect
                             cars
@@ -363,12 +367,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let text = 
+            let text =
                 let x = 1200
                 let y = 50
                 [
                 text[X x; Y y; SVGAttr.FontSize 30][
-                    tspan[X x; Dy 40][str "USA"] 
+                    tspan[X x; Dy 40][str "USA"]
                     tspan[X x; Dy 40][str "Europe"]
                     tspan[X x; Dy 40][str "Asia"]
                     tspan[X x; Dy 40][str "Other"]
