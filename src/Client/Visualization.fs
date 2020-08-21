@@ -24,32 +24,36 @@ module Visualization =
         | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
         |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#ffc800"; OnMouseOver dispatch][]
 
-    let rect (input : ('a * list<Car>)) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (dispatch) : ReactElement =
+    let rect (input : list<Car>) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (origin : Origin) (dispatch) : ReactElement =
 
         let x = (width/count)
         let offset = x * index
-        let origin = fst input
-        let cars = (snd input) |> List.length
+        let cars = input |> List.length
         let y = (height/max) * cars
 
 
         let rectStyle : list<IProp> =
 
+            let backgroundColor =
+                match origin with
+                | USA    -> SVGAttr.Fill "#1f78b4"
+                | Europe -> SVGAttr.Fill "#33a02c"
+                | Asia   -> SVGAttr.Fill "#e31a1c"
+                | _      -> SVGAttr.Fill "Grey"
+
             let (hovered, partly) = isHovered
             match hovered, partly with
-            |true, _ -> [SVGAttr.Fill "#5fb8f4"]
-            |false, true -> [SVGAttr.StrokeWidth "2"; SVGAttr.Stroke "black"; SVGAttr.Fill "#1f78b4"]
-            |false, false -> [SVGAttr.Fill "#1f78b4"]
+            |true, _ -> [SVGAttr.FillOpacity 0.7; backgroundColor]
+            |false, true -> [SVGAttr.StrokeWidth "2"; SVGAttr.Stroke "black"; backgroundColor]
+            |false, false -> [backgroundColor]
+
+
 
 
 
         rect ([X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; OnMouseOver dispatch] @ rectStyle) []
 
-        // match origin with
-        // | USA    -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#1f78b4"] []
-        // | Europe -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#33a02c";] []
-        // | Asia   -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "#e31a1c"] []
-        // | _      -> rect [X offset; Y (height-y); SVGAttr.Width x; SVGAttr.Height y; SVGAttr.Fill "Grey"] []
+
 
 
     let carToRow i (c : list<string>) isHovered (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =
