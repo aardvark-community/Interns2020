@@ -39,7 +39,6 @@ let init () : Model * Cmd<Msg> =
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
 // these commands in turn, can dispatch messages to which the update function will react.
-
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
     | _, SelectCars t ->
@@ -82,22 +81,13 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
-        let rangekw =
-            let kw = cars |> List.map (fun car -> car.kw)
-            let range = {
-                minimum = (kw |> List.min)//  - float 1
-                maximum = (kw |> List.max)//  + float 1
-                size = (kw |> List.max) - (kw |> List.min)
-            }
-            range
-
         let groups = cars |> List.groupBy (fun car -> car.origin)
-
+        
         let gCars = cars |> List.groupBy (fun car -> car.brand)
         let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
-        let originLookup =
+        let originLookup = 
             gCars
-            |> List.map (fun (brand,cars) ->
+            |> List.map (fun (brand,cars) -> 
                 let origin = (cars |> List.head).origin
                 (brand,origin)
                 )
@@ -112,7 +102,6 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
-                    rangekw             = rangekw
                     carGroups           = groups
                     originLookup        = originLookup
             }
@@ -248,12 +237,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
 
-            // let input =
-            //     model.hoveredCarId
+            // let input = 
+            //     model.hoveredCarId 
             //     |> Option.map (string)
             //     |> Option.defaultValue ("")
 
-            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str (string model.hoveredItems) ]
+            let carMap = 
+                model.cars 
+                |> List.map (fun car -> (car.id, car)) 
+                |> Map.ofList
+
+            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str ""]
 
             let height = 1000
             // let cy = 50
@@ -262,7 +256,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let rangeMpg = model.rangeMpg
             let rangeHp = model.rangeHp
             let rangeLphundertkm = model.rangeLphundertkm
-            let rangekw = model.rangekw
 
             // let isHovered (car : Car) =
             //     match model.hoveredCarId with
@@ -303,7 +296,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         car
                         (fun car -> car.lphundertkm)
                         (rangeX)
-                        (fun car -> car.kw)
+                        (fun car -> car.horsepower)
                         (rangeY)
                         540
                         500
@@ -329,7 +322,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     let newMax = count |> List.max
                     model.groupedCars
                     |> List.mapi (fun i (brand,cars) ->
-                        let hovered = cars |> List.map (fun car -> car.id)
+                        let hovered = cars |> List.map (fun car -> car.id) 
                         let origin = model.originLookup |> Map.find brand
                         Cars.Visualization.rect
                             cars
@@ -353,15 +346,15 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let lineX1 = line[X1 580; Y1 500; X2 1080; Y2 500; Style [Stroke "black"]] []
             let lineY1 = line[X1 580; Y1 500; X2 580; Y2 0; Style [Stroke "black"]] []
 
-            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangekw
+            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let text =
+            let text = 
                 let x = 1200
                 let y = 50
                 [
                 text[X x; Y y; SVGAttr.FontSize 30][
-                    tspan[X x; Dy 40][str "USA"]
+                    tspan[X x; Dy 40][str "USA"] 
                     tspan[X x; Dy 40][str "Europe"]
                     tspan[X x; Dy 40][str "Asia"]
                     tspan[X x; Dy 40][str "Other"]
