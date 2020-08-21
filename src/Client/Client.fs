@@ -240,7 +240,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             let height = 1000
             // let cy = 50
-            let width = 1080
+            let width = 2000
 
             let rangeMpg = model.rangeMpg
             let rangeHp = model.rangeHp
@@ -271,8 +271,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (rangeX)
                         (fun car -> car.horsepower)
                         (rangeY)
-                        (width /2)
-                        (height/2)
+                        540
+                        500
                         0.0
                         (isHovered car)
                         (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
@@ -287,8 +287,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         (rangeX)
                         (fun car -> car.horsepower)
                         (rangeY)
-                        (width /2)
-                        (height/2)
+                        540
+                        500
                         580.0
                         (isHovered car)
                         (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
@@ -318,12 +318,12 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             (List.length count)
                             newMax
                             i
-                            width
-                            (height/2)
-                            (height/2)
+                            1080
+                            500
+                            500
                             (isHoveredRect (snd x))
                             (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
-                            )
+                        )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
@@ -337,11 +337,20 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let scatterplots =  [fcircleLine;fcircleLine1]
+            let text = [
+                text[X 1200; Y 100; SVGAttr.FontSize 30][
+                    tspan[X 1200; Dy 40][str "USA"] 
+                    tspan[X 1200; Dy 40][str "Asia"]
+                    tspan[X 1200; Dy 40][str "Europe"]
+                    tspan[X 1200; Dy 40][str "Other"]
+                    ]
+                circle [Cx 1180; Cy 130; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
+                circle [Cx 1180; Cy 170; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
+                circle [Cx 1180; Cy 210; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
+                circle [Cx 1180; Cy 250; R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
+                ]
 
-            let finalCircles = List.concat scatterplots
-
-            let svgContent = [finalCircles;rects] |> List.concat
+            let svgContent = [fcircleLine;fcircleLine1;rects;text] |> List.concat
 
             Container.container [] [
                 svg [SVGAttr.Width width; SVGAttr.Height height] svgContent
