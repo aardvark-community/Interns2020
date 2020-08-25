@@ -69,5 +69,46 @@ module Visualization =
 
         tr [rowStyle] tds
 
+    let createDetailrow (header : string) (value : string) (i : int) : ReactElement =
+        let rowstyle =  if i%2=0 then Style [BackgroundColor "#cccccc"] else Style [BackgroundColor "#eeeeee"]
+        tr[rowstyle][
+            th[][str (sprintf "%s:" header)]
+            td[][str value]
+        ]
+
+    let creatDetailNumeric (header : string) (value : float) (i : int) : ReactElement =
+        let styledValue = sprintf "%.1f" value
+        createDetailrow header styledValue i
+
+    let hoverDetail carMap model=
+        let setCount = model.hoveredItems |> Set.count
+        match setCount with
+        |0 -> table[][]
+        |1 ->
+            let carid = model.hoveredItems |> Set.toList |> List.head
+            let car = carMap |> Map.find carid
+
+            table[][
+                createDetailrow("brand")(car.brand.ToString())0
+                createDetailrow("Name")(car.name.ToString())1
+                creatDetailNumeric("MpG")(car.mpg)2
+                creatDetailNumeric("L/100km")(car.lphundertkm)3
+                creatDetailNumeric("Cylinders")(car.cylinders)4
+                creatDetailNumeric("Engine displacement")(car.engineDisplacement)5
+                creatDetailNumeric("Horsepower")(car.horsepower)6
+                creatDetailNumeric("KW")(car.kw)7
+                creatDetailNumeric("Vehicle weight")(car.weight)8
+                creatDetailNumeric("Acceleration")(car.acceleration)9
+                creatDetailNumeric("Model year")(car.modelYear)10
+                createDetailrow("Origin")(car.origin.ToString())11
+            ]
+        |_ ->
+            let car = model.hoveredItems |> Set.toList |> List.head
+            let brand = (carMap |> Map.find car).brand
+            let result = brand + " " + string setCount
+            table[][]
+
+
+
     //let circles (input : list<Car>) : list<ReactElement> = failwith ""
 
