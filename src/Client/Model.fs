@@ -49,7 +49,6 @@ type Model = {
     rangekw             : Domain
     //hoveredCarId        : option<Guid>
     hoveredItems        : Set<Guid>
-    carGroups           : list<Origin * list<Car>>
     originLookup        : Map<string,Origin>
 
 }
@@ -122,7 +121,6 @@ module Model =
                 }
             //hoveredCarId = None
             hoveredItems = Set.empty
-            carGroups = []
             originLookup = Map.empty
         }
 

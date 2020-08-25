@@ -85,17 +85,15 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
-        let groups = cars |> List.groupBy (fun car -> car.origin)
-        let gCars = groups |> List.map (fun (a,b) -> a, b |> List.groupBy (fun car -> car.brand))
+        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortByDescending (fun (orgin, cars) ->  cars.Length)
         let sortedCars =
-            gCars
-            |> List.map (fun (o, brandGroups) ->
-
-                //let brandHisto1 = brandGroups //|> List.map(fun (a,b)  -> (a, b.Length))
-                //let brandHisto = brandHisto1 |> List.concat
-                let sbrandHisto = brandGroups |> List.sortByDescending (snd)
-                o, sbrandHisto
-            )
+            originGroupedSorted
+            |> List.map (fun (origin, originCars) ->
+                let sortedBrands =
+                    originCars
+                    |> List.groupBy (fun car -> car.brand)
+                    |> List.sortByDescending (fun (brand, brandCars) -> brandCars.Length)
+                origin, sortedBrands)
 
         let originLookup = Model.CreateOriginLookup(cars)
         let currentModel =
@@ -107,7 +105,6 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
-                    carGroups           = groups
                     originLookup        = originLookup
             }
 
@@ -262,7 +259,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     result
                 |_ ->
                     let car = model.hoveredItems |> Set.toList |> List.head
-                    let brand = (carMap |> Map.find car).mpg
+                    let brand = (carMap |> Map.find car).brand
                     let result = brand + " " + string setCount
                     result
 
