@@ -40,7 +40,7 @@ type Model = {
     attributes          : list<String>
     footer              : list<String>
     attributes2         : list<String>
-    groupedCars         : list<string * list<Car>>
+    groupedCars         : list<Origin * list<string * list<Car>>>
     rangeMpg            : Domain
     rangeCy             : Domain
     rangeHp             : Domain
@@ -126,3 +126,12 @@ module Model =
             originLookup = Map.empty
         }
 
+
+    let CreateOriginLookup (cars : list<Car>) : (Map<string, Origin>)=
+        let gCars = cars |> List.groupBy (fun x -> x.brand)
+        let flookupt = gCars |> List.map (fun (a,b) -> a, b.Head.origin)
+
+
+        flookupt |> Map.ofList
+
+    let originLookup = CreateOriginLookup

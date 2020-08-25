@@ -86,17 +86,18 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             range
 
         let groups = cars |> List.groupBy (fun car -> car.origin)
-
-        let gCars = cars |> List.groupBy (fun car -> car.brand)
-        let sortedCars = gCars |> List.sortByDescending (fun x -> (snd x) |> List.length)
-        let originLookup =
+        let gCars = groups |> List.map (fun (a,b) -> a, b |> List.groupBy (fun car -> car.brand))
+        let sortedCars =
             gCars
-            |> List.map (fun (brand,cars) ->
-                let origin = (cars |> List.head).origin
-                (brand,origin)
-                )
-            |> Map.ofList
+            |> List.map (fun (o, brandGroups) ->
 
+                //let brandHisto1 = brandGroups //|> List.map(fun (a,b)  -> (a, b.Length))
+                //let brandHisto = brandHisto1 |> List.concat
+                let sbrandHisto = brandGroups |> List.sortByDescending (snd)
+                o, sbrandHisto
+            )
+
+        let originLookup = Model.CreateOriginLookup(cars)
         let currentModel =
             {
                 currentModel with
@@ -255,15 +256,16 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 let setCount = model.hoveredItems |> Set.count
                 match setCount with
                 |0 -> ""
-                |1 -> 
+                |1 ->
                     let car = model.hoveredItems |> Set.toList |> List.head
                     let result = string (carMap |> Map.find car)
                     result
                 |_ ->
                     let car = model.hoveredItems |> Set.toList |> List.head
-                    let brand = (carMap |> Map.find car).brand
+                    let brand = (carMap |> Map.find car).mpg
                     let result = brand + " " + string setCount
                     result
+
 
             div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ str hoverDetail]
 
@@ -331,29 +333,57 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Seq.max xs |> Some
 
             let rects =
-                let cars = model.groupedCars |> List.map (snd)
-                let count = cars |> List.map (List.length)
-                let max = count |> tryMax
-                match max with
-                |None -> []
-                | _ ->
-                    let newMax = count |> List.max
-                    model.groupedCars
-                    |> List.mapi (fun i (brand,cars) ->
-                        let hovered = cars |> List.map (fun car -> car.id)
-                        let origin = model.originLookup |> Map.find brand
-                        Cars.Visualization.rect
-                            cars
-                            (List.length count)
-                            newMax
-                            i
-                            1080
-                            500
-                            500
-                            (isHoveredRect cars)
-                            origin
-                            (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
-                        )
+                    let ncount = model.groupedCars |> List.map (fun (o, brandGroups) ->
+
+                        let brandHisto = brandGroups |> List.map(fun (a,b)  -> (b.Length))
+                        brandHisto
+                    )
+                    let count = ncount |> List.concat
+                    let max = count |> tryMax
+                    match max with
+                    |None -> []
+                    | _ ->
+                        let newMax = count |> List.max
+                        let brandgroups = model.groupedCars |> List.map (fun (o, brandGroups) -> brandGroups) |> List.concat
+                        brandgroups |> List.mapi (fun i (brand,cars) ->
+                            let hovered = cars |> List.map (fun car -> car.id)
+                            let origin = model.originLookup |> Map.find brand
+                            Cars.Visualization.rect
+                                cars
+                                (List.length count)
+                                newMax
+                                i
+                                1080
+                                500
+                                500
+                                (isHoveredRect cars)
+                                origin
+                                (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
+                            )
+
+            // let rects =
+            //     let count = cars |> List.map (List.length)
+            //     let max = count |> tryMax
+            //     match max with
+            //     |None -> []
+            //     | _ ->
+            //         let newMax = count |> List.max
+            //         model.groupedCars
+            //         |> List.mapi (fun i (brand,cars) ->
+            //             let hovered = carsi |> List.map (fun car -> car.id)
+            //             let origin = model.originLookup |> Map.find brand
+            //             Cars.Visualization.rect
+            //                 cars
+            //                 (List.length count)
+            //                 newMax
+            //                 i
+            //                 1080
+            //                 500
+            //                 500
+            //                 (isHoveredRect cars)
+            //                 origin
+            //                 (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
+            //             )
 
             let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
             let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
