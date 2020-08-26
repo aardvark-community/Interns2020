@@ -262,7 +262,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let rangeLphundertkm = model.rangeLphundertkm
 
             // let isHovered (car : Car) =
-            //     match model.hoveredCarId with
+            //     match model.hoveredItems with
             //     | Some hCar when hCar = car.id -> true
             //     | _ -> false
 

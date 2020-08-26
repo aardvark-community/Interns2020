@@ -80,6 +80,22 @@ module Visualization =
         let styledValue = sprintf "%.1f" value
         createDetailrow header styledValue i
 
+    let createDetailcontent car =
+        [
+            createDetailrow("brand")(car.brand.ToString())0
+            createDetailrow("Name")(car.name.ToString())1
+            creatDetailNumeric("MpG")(car.mpg)2
+            creatDetailNumeric("L/100km")(car.lphundertkm)3
+            creatDetailNumeric("Cylinders")(car.cylinders)4
+            creatDetailNumeric("Engine displacement")(car.engineDisplacement)5
+            creatDetailNumeric("Horsepower")(car.horsepower)6
+            creatDetailNumeric("KW")(car.kw)7
+            creatDetailNumeric("Vehicle weight")(car.weight)8
+            creatDetailNumeric("Acceleration")(car.acceleration)9
+            creatDetailNumeric("Model year")(car.modelYear)10
+            createDetailrow("Origin")(car.origin.ToString())11
+        ]
+
     let hoverDetail carMap model=
         let setCount = model.hoveredItems |> Set.count
         match setCount with
@@ -88,25 +104,50 @@ module Visualization =
             let carid = model.hoveredItems |> Set.toList |> List.head
             let car = carMap |> Map.find carid
 
-            table[][
-                createDetailrow("brand")(car.brand.ToString())0
-                createDetailrow("Name")(car.name.ToString())1
-                creatDetailNumeric("MpG")(car.mpg)2
-                creatDetailNumeric("L/100km")(car.lphundertkm)3
-                creatDetailNumeric("Cylinders")(car.cylinders)4
-                creatDetailNumeric("Engine displacement")(car.engineDisplacement)5
-                creatDetailNumeric("Horsepower")(car.horsepower)6
-                creatDetailNumeric("KW")(car.kw)7
-                creatDetailNumeric("Vehicle weight")(car.weight)8
-                creatDetailNumeric("Acceleration")(car.acceleration)9
-                creatDetailNumeric("Model year")(car.modelYear)10
-                createDetailrow("Origin")(car.origin.ToString())11
-            ]
+            table[] (createDetailcontent car)
         |_ ->
             let car = model.hoveredItems |> Set.toList |> List.head
             let brand = (carMap |> Map.find car).brand
             let result = brand + " " + string setCount
-            table[][]
+            //let list = model.hoveredItems.tolist
+            //let mpg = model.hoveredItems |> List.map (fun x -> x.mpg)
+            let sumCar =
+                model.hoveredItems
+                |> Set.map (fun carid -> carMap |> Map.find carid)
+                |> Set.fold (fun state car ->
+                        let newstate =
+                            {
+                                state with
+                                    mpg                = state.mpg + car.mpg
+                                    lphundertkm        = state.lphundertkm + car.lphundertkm
+                                    cylinders          = state.cylinders + car.cylinders
+                                    engineDisplacement = state.engineDisplacement + car.engineDisplacement
+                                    horsepower         = state.horsepower + car.horsepower
+                                    kw                 = state.kw + car.kw
+                                    weight             = state.weight + car.weight
+                                    acceleration       = state.acceleration + car.acceleration
+                                    modelYear          = state.modelYear + car.modelYear
+                                    brand = car.brand
+                                    origin = car.origin
+                                    name = "-"
+                            }
+                        newstate) Car.empty
+            let count = model.hoveredItems |> Set.count |> float
+            let avgCar =
+                {
+                    sumCar with
+                        mpg                = sumCar.mpg / count
+                        lphundertkm        = sumCar.lphundertkm / count
+                        cylinders          = sumCar.cylinders / count
+                        engineDisplacement = sumCar.engineDisplacement / count
+                        horsepower         = sumCar.horsepower / count
+                        kw                 = sumCar.kw / count
+                        weight             = sumCar.weight / count
+                        acceleration       = sumCar.acceleration / count
+                        modelYear          = sumCar.modelYear / count
+                }
+
+            table[] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar))
 
 
 

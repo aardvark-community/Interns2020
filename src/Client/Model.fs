@@ -30,6 +30,8 @@ type Domain = {
     size    : float
 }
 
+
+
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
@@ -54,6 +56,7 @@ type Model = {
 }
 
 module Car =
+
     let stringify (car : Car) : list<string> =
         [
             car.brand
@@ -69,6 +72,23 @@ module Car =
             string car.modelYear
             car.origin.ToString()
         ]
+
+    let empty : Car =
+        {
+            id                 = System.Guid.NewGuid()
+            brand              =""
+            name               =""
+            mpg                = 0.0
+            lphundertkm        = 0.0
+            cylinders          = 0.0
+            engineDisplacement = 0.0
+            horsepower         = 0.0
+            kw                 = 0.0
+            weight             = 0.0
+            acceleration       = 0.0
+            modelYear          = 0.0
+            origin             = Origin.Other
+        }
 
 module Model =
 
