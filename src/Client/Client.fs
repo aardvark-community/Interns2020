@@ -18,7 +18,7 @@ open Cars
 // the state of the application changes *only* in reaction to these events
 type Msg =
     | LoadCsv
-    | Decrement
+    | ChangeSorting
     | InitialCountLoaded of string
     //| SetHoverText of string
     | SelectCars of Set<Guid>
@@ -33,6 +33,42 @@ let init () : Model * Cmd<Msg> =
         Cmd.OfPromise.perform initialCounter () InitialCountLoaded
 
     Model.initialModel, loadCountCmd
+
+
+let sortedCarsByBrand cars sortMode =
+    let groupedByBrand = cars |> List.groupBy (fun car -> car.brand)
+    match sortMode with
+    | Unsorted -> groupedByBrand
+    | Sortedbyasce -> groupedByBrand |> List.sortBy (fun (brand,cars) ->  cars.Length)
+    | Sortedbydes -> groupedByBrand |> List.sortByDescending (fun (brand,cars) ->  cars.Length)
+    | _ -> []
+
+let sortedCarsByBrandAndOrigin cars sortMode =
+    match sortMode with
+    | Sortedbybrandorigin ->
+        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortByDescending (fun (orgin, cars) ->  cars.Length)
+        let sortedCars =
+            originGroupedSorted
+            |> List.map (fun (origin, originCars) ->
+                let sortedBrands =
+                    originCars
+                    |> List.groupBy (fun car -> car.brand)
+                    |> List.sortByDescending (fun (brand, brandCars) -> brandCars.Length)
+                origin, sortedBrands)
+
+        sortedCars
+    | SortedbybrandoriginAsc->
+        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortBy (fun (orgin, cars) ->  cars.Length)
+        let sortedCars =
+            originGroupedSorted
+            |> List.map (fun (origin, originCars) ->
+                let sortedBrands =
+                    originCars
+                    |> List.groupBy (fun car -> car.brand)
+                    |> List.sortBy (fun (brand, brandCars) -> brandCars.Length)
+                origin, sortedBrands)
+        sortedCars
+    | _ -> []
 
 
 
@@ -85,103 +121,121 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
             }
             range
 
-        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortByDescending (fun (orgin, cars) ->  cars.Length)
-        let sortedCars =
-            originGroupedSorted
-            |> List.map (fun (origin, originCars) ->
-                let sortedBrands =
-                    originCars
-                    |> List.groupBy (fun car -> car.brand)
-                    |> List.sortByDescending (fun (brand, brandCars) -> brandCars.Length)
-                origin, sortedBrands)
-
         let originLookup = Model.CreateOriginLookup(cars)
         let currentModel =
             {
                 currentModel with
                     cars                = cars
                     attributes          = header
-                    groupedCars         = sortedCars
+                    groupedCarsbybrandbyorigin         = sortedCarsByBrandAndOrigin cars currentModel.sortmode
+                    groupedCarsbybrand         = sortedCarsByBrand cars currentModel.sortmode
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
                     originLookup        = originLookup
             }
 
-        currentModel, Cmd.none
+       // currentModel, Cmd.none
 
-            //let rangeCy =
-            //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
-            //    let range = {
-            //        minimum = (cylinders |> List.min)//  - float 1
-            //        maximum = (cylinders |> List.max)//  + float 1
-            //        size = (cylinders |> List.max) - (cylinders |> List.min)
-            //    }
-            //    range
+        // let rangeCy =
+        //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
+        //    let range = {
+        //        minimum = (cylinders |> List.min)//  - float 1
+        //        maximum = (cylinders |> List.max)//  + float 1
+        //        size = (cylinders |> List.max) - (cylinders |> List.min)
+        //    }
+        //    range
 
-            //let rangeEd =
-            //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
-            //    let range = {
-            //        minimum = (cylinders |> List.min)//  - float 1
-            //        maximum = (cylinders |> List.max)//  + float 1
-            //        size = (cylinders |> List.max) - (cylinders |> List.min)
-            //    }
-            //    range
+        // let rangeEd =
+        //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
+        //    let range = {
+        //        minimum = (cylinders |> List.min)//  - float 1
+        //        maximum = (cylinders |> List.max)//  + float 1
+        //        size = (cylinders |> List.max) - (cylinders |> List.min)
+        //    }
+        //    range
 
-            //let carMpg =
-            //    newCars
-            //    |> List.map (fun car -> car.mpg)
+        let carMpg =
+           cars
+           |> List.map (fun car -> car.mpg)
 
-            //let carCyl =
-            //    newCars
-            //    |> List.map (fun car -> car.cylinders)
+        let carlph =
+           cars
+           |> List.map (fun car -> car.lphundertkm)
 
-            //let carEng =
-            //    newCars
-            //    |> List.map (fun car -> car.engineDisplacement)
+        let carCyl =
+           cars
+           |> List.map (fun car -> car.cylinders)
 
-            //let carHp =
-            //    newCars
-            //    |> List.map (fun car -> car.horsepower)
+        let carEng =
+           cars
+           |> List.map (fun car -> car.engineDisplacement)
 
-            //let carVw =
-            //    newCars
-            //    |> List.map (fun car -> car.weight)
+        let carHp =
+           cars
+           |> List.map (fun car -> car.horsepower)
 
-            //let carAcc =
-            //    newCars
-            //    |> List.map (fun car -> car.acceleration)
-
-            //let carMy =
-            //    newCars
-            //    |> List.map (fun car -> car.modelYear)
-
-            //let numOfCars =
-            //    newCars
-            //    |> List.length
-
-            //let avg (input : list<float>) : float =
-            //    input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
-
-            //let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp); sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); ""]
+        let carkw =
+           cars
+           |> List.map (fun car -> car.kw)
 
 
-            //let m = {
-            //    currentModel with
-            //        cars = cars;
-            //        attributes = newHead;
-            //        //footer = foot;
-            //        //attributes2 = head2;
-            //        //groupedCars = groupedCars;
-            //        //rangeMpg = rangeMpg;
-            //        //rangeHp = rangeHp;
-            //        //rangeCy = rangeCy;
-            //        //rangeEd = rangeEd;
-            //}
-            //m, Cmd.none
+        let carVw =
+           cars
+           |> List.map (fun car -> car.weight)
 
-    | Some counter, Decrement ->
-        currentModel, Cmd.none
+        let carAcc =
+           cars
+           |> List.map (fun car -> car.acceleration)
+
+        let carMy =
+           cars
+           |> List.map (fun car -> car.modelYear)
+
+        let numOfCars =
+           cars
+           |> List.length
+
+        let avg (input : list<float>) : float =
+           input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
+
+        let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carlph); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp);  sprintf "%.1f" (avg carkw);sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); "USA"]
+
+        let asdf = {
+                currentModel with
+                    footer = foot;
+                   }
+        asdf, Cmd.none
+
+
+        // let m = {
+        //    currentModel with
+        //        cars = cars;
+        //        attributes = newHead;
+        //        footer = foot;
+        //        attributes2 = head2;
+        //        groupedCars = groupedCars;
+        //        rangeMpg = rangeMpg;
+        //        rangeHp = rangeHp;
+        //        rangeCy = rangeCy;
+        //        rangeEd = rangeEd;
+        // }
+        // m, Cmd.none
+
+    | Some counter, ChangeSorting ->
+        let updatetSortmode =
+            match currentModel.sortmode with
+            | Unsorted -> Sortedbydes
+            | Sortedbydes -> Sortedbyasce
+            | Sortedbyasce -> Sortedbybrandorigin
+            | Sortedbybrandorigin -> SortedbybrandoriginAsc
+            | SortedbybrandoriginAsc -> Unsorted
+
+        {currentModel with
+            sortmode = updatetSortmode
+            groupedCarsbybrandbyorigin         = sortedCarsByBrandAndOrigin currentModel.cars updatetSortmode
+            groupedCarsbybrand         = sortedCarsByBrand currentModel.cars updatetSortmode
+            }, Cmd.none
     | _, InitialCountLoaded data ->
         let nextModel = { Model.initialModel with rawData = Some data }
 
@@ -317,7 +371,35 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Seq.max xs |> Some
 
             let rects =
-                    let ncount = model.groupedCars |> List.map (fun (o, brandGroups) ->
+                match model.sortmode with
+                | Unsorted
+                | Sortedbydes
+                | Sortedbyasce ->
+                    let count = model.groupedCarsbybrand |> List.map(fun (a,b)  -> (b.Length))
+                    let max = count |> tryMax
+                    match max with
+                    |None -> []
+                    | _ ->
+                        let newMax = count |> List.max
+                        model.groupedCarsbybrand
+                        |> List.mapi (fun i (brand,cars) ->
+                            let hovered = cars |> List.map (fun car -> car.id)
+                            let origin = model.originLookup |> Map.find brand
+                            Cars.Visualization.rect
+                                cars
+                                (List.length count)
+                                newMax
+                                i
+                                1080
+                                500
+                                500
+                                (isHoveredRect cars)
+                                origin
+                                (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
+                            )
+                | _ ->
+
+                    let ncount = model.groupedCarsbybrandbyorigin |> List.map (fun (o, brandGroups) ->
 
                         let brandHisto = brandGroups |> List.map(fun (a,b)  -> (b.Length))
                         brandHisto
@@ -328,7 +410,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     |None -> []
                     | _ ->
                         let newMax = count |> List.max
-                        let brandgroups = model.groupedCars |> List.map (fun (o, brandGroups) -> brandGroups) |> List.concat
+                        let brandgroups = model.groupedCarsbybrandbyorigin |> List.map (fun (o, brandGroups) -> brandGroups) |> List.concat
                         brandgroups |> List.mapi (fun i (brand,cars) ->
                             let hovered = cars |> List.map (fun car -> car.id)
                             let origin = model.originLookup |> Map.find brand
@@ -407,7 +489,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
-                    [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
+                    [ Column.column [] [ button (sprintf "Sort (%A)" (model.sortmode.ToString())) (fun _ -> dispatch ChangeSorting) ]
                       Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
 
                 let header2 =

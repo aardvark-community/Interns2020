@@ -8,6 +8,13 @@ type Origin =
 | Asia
 | Other
 
+type Sortmode =
+    |Unsorted
+    |Sortedbydes
+    |Sortedbyasce
+    |Sortedbybrandorigin
+    |SortedbybrandoriginAsc
+
 type Car = {
     id                 : System.Guid
     brand              : string
@@ -42,13 +49,15 @@ type Model = {
     attributes          : list<String>
     footer              : list<String>
     attributes2         : list<String>
-    groupedCars         : list<Origin * list<string * list<Car>>>
+    groupedCarsbybrandbyorigin : list<Origin * list<string * list<Car>>>
+    groupedCarsbybrand        : list<string * list<Car>>
     rangeMpg            : Domain
     rangeCy             : Domain
     rangeHp             : Domain
     rangeEd             : Domain
     rangeLphundertkm    : Domain
     rangekw             : Domain
+    sortmode            : Sortmode
     //hoveredCarId        : option<Guid>
     hoveredItems        : Set<Guid>
     originLookup        : Map<string,Origin>
@@ -102,7 +111,8 @@ module Model =
             attributes = []
             footer = []
             attributes2 = []
-            groupedCars = []
+            groupedCarsbybrandbyorigin = []
+            groupedCarsbybrand = []
             rangeMpg =
                 {
                     maximum = 0.0
@@ -142,6 +152,7 @@ module Model =
             //hoveredCarId = None
             hoveredItems = Set.empty
             originLookup = Map.empty
+            sortmode = Unsorted
         }
 
 
