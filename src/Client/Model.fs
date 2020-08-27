@@ -60,6 +60,8 @@ type Model = {
     sortmode            : Sortmode
     //hoveredCarId        : option<Guid>
     hoveredItems        : Set<Guid>
+    positionX           : int
+    positionY           : int
     originLookup        : Map<string,Origin>
 
 }
@@ -150,6 +152,8 @@ module Model =
                     size = 0.0
                 }
             //hoveredCarId = None
+            positionX = 0
+            positionY = 0
             hoveredItems = Set.empty
             originLookup = Map.empty
             sortmode = Unsorted

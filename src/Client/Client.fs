@@ -21,7 +21,7 @@ type Msg =
     | ChangeSorting
     | InitialCountLoaded of string
     //| SetHoverText of string
-    | SelectCars of Set<Guid>
+    | SelectCars of Set<Guid> * int * int
     | Deselect
 
 let initialCounter () = Fetch.fetchAs<unit, string> "/api/init"
@@ -77,8 +77,10 @@ let sortedCarsByBrandAndOrigin cars sortMode =
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
-    | _, SelectCars t ->
-        { currentModel with hoveredItems = t }, Cmd.none
+    | _, SelectCars (t,x,y) ->
+        { currentModel with hoveredItems = t; positionX = x; positionY = y; }, Cmd.none
+       // { currentModel with  = i }, Cmd.none
+       // { currentModel with positionY = s }, Cmd.none
     | _, Deselect ->
         { currentModel with hoveredItems = Set.empty}, Cmd.none
     | Some data, LoadCsv ->
@@ -155,51 +157,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         //    }
         //    range
 
-        let carMpg =
-           cars
-           |> List.map (fun car -> car.mpg)
+        let avgCar = Cars.Visualization.calcAverageCars(cars)
 
-        let carlph =
-           cars
-           |> List.map (fun car -> car.lphundertkm)
-
-        let carCyl =
-           cars
-           |> List.map (fun car -> car.cylinders)
-
-        let carEng =
-           cars
-           |> List.map (fun car -> car.engineDisplacement)
-
-        let carHp =
-           cars
-           |> List.map (fun car -> car.horsepower)
-
-        let carkw =
-           cars
-           |> List.map (fun car -> car.kw)
-
-
-        let carVw =
-           cars
-           |> List.map (fun car -> car.weight)
-
-        let carAcc =
-           cars
-           |> List.map (fun car -> car.acceleration)
-
-        let carMy =
-           cars
-           |> List.map (fun car -> car.modelYear)
-
-        let numOfCars =
-           cars
-           |> List.length
-
-        let avg (input : list<float>) : float =
-           input |> List.fold (fun avg x -> avg + (x/(float numOfCars))) 0.0
-
-        let foot = ["Average:"; ""; sprintf "%.1f" (avg carMpg); sprintf "%.1f" (avg carlph); sprintf "%.1f" (avg carCyl); sprintf "%.1f" (avg carEng); sprintf "%.1f" (avg carHp);  sprintf "%.1f" (avg carkw);sprintf "%.1f" (avg carVw); sprintf "%.1f" (avg carAcc); sprintf "%.1f" (avg carMy); "USA"]
+        let foot = ["Average:"; ""; sprintf "%.1f" (avgCar.mpg); sprintf "%.1f" (avgCar.lphundertkm); sprintf "%.1f" (avgCar.cylinders); sprintf "%.1f" (avgCar.engineDisplacement); sprintf "%.1f" (avgCar.horsepower);  sprintf "%.1f" (avgCar.kw);sprintf "%.1f" (avgCar.weight); sprintf "%.1f" (avgCar.acceleration); sprintf "%.1f" (avgCar.modelYear ); "USA"]
 
         let asdf = {
                 currentModel with
@@ -305,7 +265,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             //Visualization.hoverDetail (carMap) (model)
 
-            div [ Style [FontSize "20"; Top 60; Left 0; Position PositionOptions.Fixed]] [ Visualization.hoverDetail (carMap) (model)]
+            div [ Style [ Top model.positionY; Left model.positionX; Position PositionOptions.Absolute; ZIndex 999999;]] [ Visualization.hoverDetail (carMap) (model)]
 
             let height = 1000
             // let cy = 50
@@ -344,7 +304,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         500
                         0.0
                         (isHovered car)
-                        (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
+                        (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
                 )
 
             let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
@@ -360,7 +320,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         500
                         580.0
                         (isHovered car)
-                        (fun _ -> dispatch (SelectCars (Set.ofList[car.id])))
+                        (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
                 )
 
             let tryMax xs =
@@ -395,7 +355,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 500
                                 (isHoveredRect cars)
                                 origin
-                                (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
+                                (fun evt -> dispatch (SelectCars (Set.ofList hovered,(evt.pageX |> int),(evt.pageY |> int))))
                             )
                 | _ ->
 
@@ -424,7 +384,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 500
                                 (isHoveredRect cars)
                                 origin
-                                (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
+                                (fun evt -> dispatch (SelectCars (Set.ofList hovered,(evt.pageX |> int),(evt.pageY |> int))))
                             )
 
             // let rects =
@@ -451,8 +411,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
             //                 (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
             //             )
 
-            let lineX = line[X1 0; Y1 500; X2 500; Y2 500; Style [Stroke "black"]] []
-            let lineY = line[X1 0; Y1 500; X2 0; Y2 0; Style [Stroke "black"]] []
+            let lineX = line[X1 25; Y1 500; X2 525; Y2 500; Style [Stroke "black"]] []
+            let lineY = line[X1 25; Y1 500; X2 25; Y2 0; Style [Stroke "black"]] []
 
             let circleLine = lineX :: circles rangeMpg rangeHp
             let fcircleLine = lineY :: circleLine
@@ -463,23 +423,42 @@ let view (model : Model) (dispatch : Msg -> unit) =
             let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
             let fcircleLine1 = lineY1 :: circleLine1
 
-            let text =
+            //let x = 1200
+            //let y = 50
+
+            let textScatterplot=
+                [
+                    text[X 300; Y 480; SVGAttr.FontSize 20][
+                        tspan[X 175; Dy 40][str "Miles per Gallon"]
+                    ]
+                    text[X 300; Y 480; SVGAttr.FontSize 20;][
+                        tspan[X 775; Dy 40][str "liters per 100 km"]
+                    ]
+                    text[X 25; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,25,500) translate(235 -5)  scale(1 1)"][
+                        tspan[][str "Horsepower"]
+                    ]
+                    text[X 580; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,580,500) translate(235 -5)  scale(1 1)"][
+                        tspan[][str "Kilowatt"]
+                    ]
+                ]
+
+            let textLegende =
                 let x = 1200
                 let y = 50
                 [
-                text[X x; Y y; SVGAttr.FontSize 30][
-                    tspan[X x; Dy 40][str "USA"]
-                    tspan[X x; Dy 40][str "Europe"]
-                    tspan[X x; Dy 40][str "Asia"]
-                    tspan[X x; Dy 40][str "Other"]
-                    ]
-                circle [Cx (x-20); Cy (y+30); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
-                circle [Cx (x-20); Cy (y+70); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
-                circle [Cx (x-20); Cy (y+110); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
-                circle [Cx (x-20); Cy (y+150); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
+                    text [X x; Y y; SVGAttr.FontSize 30][
+                        tspan[X x; Dy 40][str "USA"]
+                        tspan[X x; Dy 40][str "Europe"]
+                        tspan[X x; Dy 40][str "Asia"]
+                        tspan[X x; Dy 40][str "Other"]
+                        ]
+                    circle [Cx (x-20); Cy (y+30); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
+                    circle [Cx (x-20); Cy (y+70); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
+                    circle [Cx (x-20); Cy (y+110); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
+                    circle [Cx (x-20); Cy (y+150); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
                 ]
 
-            let svgContent = [fcircleLine;fcircleLine1;rects;text] |> List.concat
+            let svgContent = [fcircleLine;fcircleLine1;rects;textLegende; textScatterplot] |> List.concat
 
             Container.container [] [
                 svg [SVGAttr.Width width; SVGAttr.Height height] svgContent
@@ -526,7 +505,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     model.cars
                     |> List.mapi (fun i car ->
                         let c = Cars.Car.stringify car
-                        Cars.Visualization.carToRow i c (isHovered car) (fun _ -> dispatch (SelectCars (Set.ofList [car.id])))
+                        Cars.Visualization.carToRow i c (isHovered car) (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
                     )
 
                 table [] [

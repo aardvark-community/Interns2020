@@ -7,8 +7,51 @@ open Cars
 
 module Visualization =
 
+    let calcAverageCars (x: list<Car>) =
+
+        let count = x |> List.length|> float
+
+        let sumCar =
+            x
+            |> List.fold (fun state car ->
+                let newstate =
+                    {
+                        state with
+                            mpg                = state.mpg + car.mpg
+                            lphundertkm        = state.lphundertkm + car.lphundertkm
+                            cylinders          = state.cylinders + car.cylinders
+                            engineDisplacement = state.engineDisplacement + car.engineDisplacement
+                            horsepower         = state.horsepower + car.horsepower
+                            kw                 = state.kw + car.kw
+                            weight             = state.weight + car.weight
+                            acceleration       = state.acceleration + car.acceleration
+                            modelYear          = state.modelYear + car.modelYear
+                            brand = car.brand
+                            origin = car.origin
+                            name = "-"
+                    }
+                newstate) Car.empty
+
+        let avgCar =
+            {
+                sumCar with
+                    mpg                = sumCar.mpg / count
+                    lphundertkm        = sumCar.lphundertkm / count
+                    cylinders          = sumCar.cylinders / count
+                    engineDisplacement = sumCar.engineDisplacement / count
+                    horsepower         = sumCar.horsepower / count
+                    kw                 = sumCar.kw / count
+                    weight             = sumCar.weight / count
+                    acceleration       = sumCar.acceleration / count
+                    modelYear          = sumCar.modelYear / count
+            }
+
+        avgCar
+
+
     let circle (car: Car) (x : Car -> float) (rangeX : Domain) (y : Cars.Car -> float) (rangeY : Domain) width height offsetX isHovered (dispatch) : ReactElement =
-        let cx = (((x car - rangeX.minimum) / rangeX.size) * (float width)) + offsetX
+        let offset = 25.0
+        let cx = (((x car - rangeX.minimum) / rangeX.size) * (float width)) + offsetX + offset
         let cy = ((y car - rangeY.minimum) / rangeY.size) * (float height)
 
         let strokeStyle =
@@ -19,10 +62,10 @@ module Visualization =
                 SVGAttr.StrokeWidth "0"
 
         match car.origin with
-        | USA    -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#1f78b4"; OnMouseOver   dispatch][]
-        | Europe -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#33a02c"; OnMouseOver  dispatch][]
-        | Asia   -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
-        |  _     -> circle [Cx cx; Cy (float height-cy); R "5"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#ffc800"; OnMouseOver dispatch][]
+        | USA    -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#1f78b4"; OnMouseOver   dispatch][]
+        | Europe -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#33a02c"; OnMouseOver  dispatch][]
+        | Asia   -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
+        |  _     -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#ffc800"; OnMouseOver dispatch][]
 
     let rect (input : list<Car>) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (origin : Origin) (dispatch) : ReactElement =
 
@@ -104,50 +147,25 @@ module Visualization =
             let carid = model.hoveredItems |> Set.toList |> List.head
             let car = carMap |> Map.find carid
 
-            table[] (createDetailcontent car)
+            table[ Style [ Top model.positionY; Left model.positionX;]] (createDetailcontent car)
         |_ ->
             let car = model.hoveredItems |> Set.toList |> List.head
             let brand = (carMap |> Map.find car).brand
             let result = brand + " " + string setCount
             //let list = model.hoveredItems.tolist
             //let mpg = model.hoveredItems |> List.map (fun x -> x.mpg)
-            let sumCar =
+            let hoverdCars =
                 model.hoveredItems
                 |> Set.map (fun carid -> carMap |> Map.find carid)
-                |> Set.fold (fun state car ->
-                        let newstate =
-                            {
-                                state with
-                                    mpg                = state.mpg + car.mpg
-                                    lphundertkm        = state.lphundertkm + car.lphundertkm
-                                    cylinders          = state.cylinders + car.cylinders
-                                    engineDisplacement = state.engineDisplacement + car.engineDisplacement
-                                    horsepower         = state.horsepower + car.horsepower
-                                    kw                 = state.kw + car.kw
-                                    weight             = state.weight + car.weight
-                                    acceleration       = state.acceleration + car.acceleration
-                                    modelYear          = state.modelYear + car.modelYear
-                                    brand = car.brand
-                                    origin = car.origin
-                                    name = "-"
-                            }
-                        newstate) Car.empty
-            let count = model.hoveredItems |> Set.count |> float
-            let avgCar =
-                {
-                    sumCar with
-                        mpg                = sumCar.mpg / count
-                        lphundertkm        = sumCar.lphundertkm / count
-                        cylinders          = sumCar.cylinders / count
-                        engineDisplacement = sumCar.engineDisplacement / count
-                        horsepower         = sumCar.horsepower / count
-                        kw                 = sumCar.kw / count
-                        weight             = sumCar.weight / count
-                        acceleration       = sumCar.acceleration / count
-                        modelYear          = sumCar.modelYear / count
-                }
 
-            table[] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar))
+            let avgCar =
+                hoverdCars
+                |> Set.toList
+                |> calcAverageCars
+
+            let count = hoverdCars |> Set.count |> float
+
+            table[ Style [ Top model.positionY; Left model.positionX;]] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar))
 
 
 
