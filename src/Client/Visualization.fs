@@ -123,19 +123,21 @@ module Visualization =
         let styledValue = sprintf "%.1f" value
         createDetailrow header styledValue i
 
-    let createDetailcontent car =
+    let createDetailcontent car avg =
         [
+            let average = if avg then "Ø" else ""
+
             createDetailrow("brand")(car.brand.ToString())0
             createDetailrow("Name")(car.name.ToString())1
-            creatDetailNumeric("MpG")(car.mpg)2
-            creatDetailNumeric("L/100km")(car.lphundertkm)3
-            creatDetailNumeric("Cylinders")(car.cylinders)4
-            creatDetailNumeric("Engine displacement")(car.engineDisplacement)5
-            creatDetailNumeric("Horsepower")(car.horsepower)6
-            creatDetailNumeric("KW")(car.kw)7
-            creatDetailNumeric("Vehicle weight")(car.weight)8
-            creatDetailNumeric("Acceleration")(car.acceleration)9
-            creatDetailNumeric("Model year")(car.modelYear)10
+            creatDetailNumeric("MpG " + average)(car.mpg)2
+            creatDetailNumeric("L/100km " + average)(car.lphundertkm)3
+            creatDetailNumeric("Cylinders " + average)(car.cylinders)4
+            creatDetailNumeric("Engine displacement " + average)(car.engineDisplacement)5
+            creatDetailNumeric("Horsepower " + average)(car.horsepower)6
+            creatDetailNumeric("KW " + average)(car.kw)7
+            creatDetailNumeric("Vehicle weight " + average)(car.weight)8
+            creatDetailNumeric("Acceleration " + average)(car.acceleration)9
+            creatDetailNumeric("Model year " + average)(car.modelYear)10
             createDetailrow("Origin")(car.origin.ToString())11
         ]
 
@@ -147,7 +149,7 @@ module Visualization =
             let carid = model.hoveredItems |> Set.toList |> List.head
             let car = carMap |> Map.find carid
 
-            table[ Style [ Top model.positionY; Left model.positionX;]] (createDetailcontent car)
+            table[ Style [ Top model.positionY; Left model.positionX;]] (createDetailcontent car false)
         |_ ->
             let car = model.hoveredItems |> Set.toList |> List.head
             let brand = (carMap |> Map.find car).brand
@@ -165,7 +167,7 @@ module Visualization =
 
             let count = hoverdCars |> Set.count |> float
 
-            table[ Style [ Top model.positionY; Left model.positionX;]] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar))
+            table[ Style [ Top model.positionY; Left model.positionX;]] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar true))
 
 
 

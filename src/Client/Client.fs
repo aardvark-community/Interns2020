@@ -267,7 +267,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             div [ Style [ Top model.positionY; Left model.positionX; Position PositionOptions.Absolute; ZIndex 999999;]] [ Visualization.hoverDetail (carMap) (model)]
 
-            let height = 1000
+            let height = 1100
             // let cy = 50
             let width = 2000
 
@@ -352,7 +352,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 i
                                 1080
                                 500
-                                500
+                                590
                                 (isHoveredRect cars)
                                 origin
                                 (fun evt -> dispatch (SelectCars (Set.ofList hovered,(evt.pageX |> int),(evt.pageY |> int))))
@@ -428,17 +428,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
             let textScatterplot=
                 [
-                    text[X 300; Y 480; SVGAttr.FontSize 20][
-                        tspan[X 175; Dy 40][str "Miles per Gallon"]
+                    text[X 110; Y 520; SVGAttr.FontSize 20][
+                        tspan[][str "Miles per Gallon (min : 9 - max : 47)"]
                     ]
-                    text[X 300; Y 480; SVGAttr.FontSize 20;][
-                        tspan[X 775; Dy 40][str "liters per 100 km"]
+                    text[X 670; Y 520; SVGAttr.FontSize 20;][
+                        tspan[][str "liters per 100 km (min : 5 - max : 26)"]
                     ]
-                    text[X 25; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,25,500) translate(235 -5)  scale(1 1)"][
-                        tspan[][str "Horsepower"]
+                    text[X 25; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,25,500) translate(115 -5)  scale(1 1)"][
+                        tspan[][str "Horsepower (min : 46 - max : 230)"]
                     ]
-                    text[X 580; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,580,500) translate(235 -5)  scale(1 1)"][
-                        tspan[][str "Kilowatt"]
+                    text[X 580; Y 500; SVGAttr.FontSize 20; SVGAttr.Transform "rotate(270,580,500) translate(115 -5)  scale(1 1)"][
+                        tspan[][str "Kilowatt (min : 34 - max : 172)"]
                     ]
                 ]
 
@@ -451,11 +451,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         tspan[X x; Dy 40][str "Europe"]
                         tspan[X x; Dy 40][str "Asia"]
                         tspan[X x; Dy 40][str "Other"]
+                        tspan[X x; Dy 100][str "  Refresh"]
                         ]
                     circle [Cx (x-20); Cy (y+30); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#1f78b4"][]
                     circle [Cx (x-20); Cy (y+70); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#33a02c"][]
                     circle [Cx (x-20); Cy (y+110); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#e31a1c"][]
                     circle [Cx (x-20); Cy (y+150); R "10"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#ffc800"][]
+                    circle [Cx (x-20); Cy (y+250); R "20"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#888888"; OnMouseOver  (fun evt -> dispatch (SelectCars (Set.empty,(evt.pageX |> int),(evt.pageY |> int))))][]
                 ]
 
             let svgContent = [fcircleLine;fcircleLine1;rects;textLegende; textScatterplot] |> List.concat
