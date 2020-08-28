@@ -1,54 +1,11 @@
-namespace Cars
+namespace Client
 
 open Fable.React
 open Fable.React.Props
-open Model
-open Cars
 open Shared
 
 module Visualization =
-
-    let calcAverageCars (x: list<Car>) =
-
-        let count = x |> List.length|> float
-
-        let sumCar =
-            x
-            |> List.fold (fun state car ->
-                let newstate =
-                    {
-                        state with
-                            mpg                = state.mpg + car.mpg
-                            lphundertkm        = state.lphundertkm + car.lphundertkm
-                            cylinders          = state.cylinders + car.cylinders
-                            engineDisplacement = state.engineDisplacement + car.engineDisplacement
-                            horsepower         = state.horsepower + car.horsepower
-                            kw                 = state.kw + car.kw
-                            weight             = state.weight + car.weight
-                            acceleration       = state.acceleration + car.acceleration
-                            modelYear          = state.modelYear + car.modelYear
-                            brand = car.brand
-                            origin = car.origin
-                            name = "-"
-                    }
-                newstate) Car.empty
-
-        let avgCar =
-            {
-                sumCar with
-                    mpg                = sumCar.mpg / count
-                    lphundertkm        = sumCar.lphundertkm / count
-                    cylinders          = sumCar.cylinders / count
-                    engineDisplacement = sumCar.engineDisplacement / count
-                    horsepower         = sumCar.horsepower / count
-                    kw                 = sumCar.kw / count
-                    weight             = sumCar.weight / count
-                    acceleration       = sumCar.acceleration / count
-                    modelYear          = sumCar.modelYear / count
-            }
-
-        avgCar
-
+   
     let circle (c : Vec2i) r col isHovered onhover : ReactElement =
 
         let strokeStyle =
@@ -57,7 +14,6 @@ module Visualization =
             else
                 SVGAttr.StrokeWidth "0"
         circle [Cx c.x; Cy c.y; R r; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill col; OnMouseOver onhover][]
-
 
     let dataCircle
         (a : 'a)
@@ -79,7 +35,6 @@ module Visualization =
 
         circle c "4" col isHovered onhover
 
-
     module ScatterPlot =
         let drawCircles dim (rangeX : Domain) (rangeY : Domain) getX getY getCol isHovered onHover data : list<ReactElement> =
             data
@@ -96,8 +51,6 @@ module Visualization =
                     (isHovered d)
                     (onHover d)//(fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
             )
-
-
 
     let rect (input : list<Car>) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (origin : Origin) (dispatch) : ReactElement =
 
@@ -121,10 +74,6 @@ module Visualization =
             |true, _ -> [SVGAttr.FillOpacity 0.7; backgroundColor]
             |false, true -> [SVGAttr.StrokeWidth "2"; SVGAttr.Stroke "black"; backgroundColor]
             |false, false -> [backgroundColor]
-
-
-
-
 
         rect ([X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; OnMouseOver dispatch] @ rectStyle) []
 
@@ -180,11 +129,8 @@ module Visualization =
 
             table[ Style [ Top model.positionY; Left model.positionX;]] (createDetailcontent car false)
         |_ ->
-            let car = model.hoveredItems |> Set.toList |> List.head
-            let brand = (carMap |> Map.find car).brand
-            let result = brand + " " + string setCount
-            //let list = model.hoveredItems.tolist
-            //let mpg = model.hoveredItems |> List.map (fun x -> x.mpg)
+            let car = model.hoveredItems |> Set.toList |> List.head            
+            
             let hoverdCars =
                 model.hoveredItems
                 |> Set.map (fun carid -> carMap |> Map.find carid)
@@ -192,11 +138,10 @@ module Visualization =
             let avgCar =
                 hoverdCars
                 |> Set.toList
-                |> calcAverageCars
+                |> Data.calcAverageCars
 
             let count = hoverdCars |> Set.count |> float
 
-            table[ Style [ Top model.positionY; Left model.positionX;]] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar true))
-
-    //let circles (input : list<Car>) : list<ReactElement> = failwith ""
+            table[Style [ Top model.positionY; Left model.positionX;]]
+                ([creatDetailNumeric "Anzahl" count 1] @ (createDetailcontent avgCar true))
 

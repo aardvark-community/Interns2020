@@ -1,8 +1,6 @@
-namespace Shared
+namespace Client
 
 type Counter = { Value : int }
-
-
 
 [<AutoOpen>]
 module Shared =

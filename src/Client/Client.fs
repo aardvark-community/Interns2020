@@ -1,19 +1,12 @@
 module Client
 
+open System
 open Elmish
 open Elmish.React
 open Fable.React
 open Fable.React.Props
-open Fetch.Types
 open Thoth.Fetch
 open Fulma
-open Thoth.Json
-
-open Shared
-open System
-
-open Cars
-
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
@@ -36,40 +29,7 @@ let init () : Model * Cmd<Msg> =
     Model.initialModel, loadCountCmd
 
 
-let sortedCarsByBrand cars sortMode =
-    let groupedByBrand = cars |> List.groupBy (fun car -> car.brand)
-    match sortMode with
-    | Unsorted -> groupedByBrand
-    | Sortedbyasce -> groupedByBrand |> List.sortBy (fun (brand,cars) ->  cars.Length)
-    | Sortedbydes -> groupedByBrand |> List.sortByDescending (fun (brand,cars) ->  cars.Length)
-    | _ -> []
 
-let sortedCarsByBrandAndOrigin cars sortMode =
-    match sortMode with
-    | Sortedbybrandorigin ->
-        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortByDescending (fun (orgin, cars) ->  cars.Length)
-        let sortedCars =
-            originGroupedSorted
-            |> List.map (fun (origin, originCars) ->
-                let sortedBrands =
-                    originCars
-                    |> List.groupBy (fun car -> car.brand)
-                    |> List.sortByDescending (fun (brand, brandCars) -> brandCars.Length)
-                origin, sortedBrands)
-
-        sortedCars
-    | SortedbybrandoriginAsc->
-        let originGroupedSorted = cars |> List.groupBy (fun car -> car.origin) |> List.sortBy (fun (orgin, cars) ->  cars.Length)
-        let sortedCars =
-            originGroupedSorted
-            |> List.map (fun (origin, originCars) ->
-                let sortedBrands =
-                    originCars
-                    |> List.groupBy (fun car -> car.brand)
-                    |> List.sortBy (fun (brand, brandCars) -> brandCars.Length)
-                origin, sortedBrands)
-        sortedCars
-    | _ -> []
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -83,68 +43,24 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Some data, LoadCsv ->
 
         printfn "loading csv"
-        let cars,header2 = Cars.Parser.parse data
-
-        let header =
-            let l,r = List.splitAt 3 header2
-            let tv = l @ ["L/100km"] @ r
-
-            let x,y = List.splitAt 7 tv
-            x @ ["KW"] @ y
-      
-        let rangeMpg =
-            cars |> computeRange (fun car -> car.mpg)
-        let rangelphundertkm =
-            cars |> computeRange (fun car -> car.lphundertkm)
-        let rangeHp =
-            cars |> computeRange (fun car -> car.horsepower)
-        let rangeCy =
-            cars |> computeRange (fun car -> car.cylinders)
+        data |> Data.loadCsv currentModel, Cmd.none
        
-        let originLookup = Model.CreateOriginLookup(cars)
-        let currentModel =
-            {
-                currentModel with
-                    cars                = cars
-                    attributes          = header
-                    groupedCarsbybrandbyorigin         = sortedCarsByBrandAndOrigin cars currentModel.sortmode
-                    groupedCarsbybrand         = sortedCarsByBrand cars currentModel.sortmode
-                    rangeMpg            = rangeMpg
-                    rangeLphundertkm    = rangelphundertkm
-                    rangeHp             = rangeHp
-                    rangeCy             = rangeCy
-                    originLookup        = originLookup
-            }   
-
-        let avgCar = Cars.Visualization.calcAverageCars(cars)
-
-        let foot = ["Average:"; ""; sprintf "%.1f" (avgCar.mpg); sprintf "%.1f" (avgCar.lphundertkm); sprintf "%.1f" (avgCar.cylinders); sprintf "%.1f" (avgCar.engineDisplacement); sprintf "%.1f" (avgCar.horsepower);  sprintf "%.1f" (avgCar.kw);sprintf "%.1f" (avgCar.weight); sprintf "%.1f" (avgCar.acceleration); sprintf "%.1f" (avgCar.modelYear ); "USA"]
-
-        let asdf = {
-                currentModel with
-                    footer = foot;
-                   }
-        asdf, Cmd.none
-       
-    | Some counter, ChangeSorting ->
+    | Some _, ChangeSorting ->
         let updatetSortmode =
             match currentModel.sortmode with
-            | Unsorted -> Sortedbydes
+            | Unsorted -> Model.sorSortedbydes
             | Sortedbydes -> Sortedbyasce
             | Sortedbyasce -> Sortedbybrandorigin
             | Sortedbybrandorigin -> SortedbybrandoriginAsc
             | SortedbybrandoriginAsc -> Unsorted
-
-        {currentModel with
-            sortmode = updatetSortmode
-            groupedCarsbybrandbyorigin         = sortedCarsByBrandAndOrigin currentModel.cars updatetSortmode
-            groupedCarsbybrand         = sortedCarsByBrand currentModel.cars updatetSortmode
-            }, Cmd.none
-    | _, InitialCountLoaded data ->
-        let nextModel = { Model.initialModel with rawData = Some data }
-
-        printf "%s" data
-        nextModel, Cmd.none
+        {
+            currentModel with
+                sortmode                   = updatetSortmode
+                groupedCarsbybrandbyorigin = Data.Data.sortedCarsByBrandAndOrigin currentModel.cars updatetSortmode
+                groupedCarsbybrand         = Data.Data.sortedCarsByBrand currentModel.cars updatetSortmode
+        }, Cmd.none
+    | _, InitialCountLoaded data ->                        
+        data |> Data.Data.loadCsv currentModel, Cmd.none
     | _ -> currentModel, Cmd.none
 
 let safeComponents =

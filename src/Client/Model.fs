@@ -1,7 +1,6 @@
-namespace Cars
+namespace Client
 
 open System
-open Shared
 
 type Vec2i =
     {
@@ -25,11 +24,11 @@ type Origin =
 | Other
 
 type Sortmode =
-    |Unsorted
-    |Sortedbydes
-    |Sortedbyasce
-    |Sortedbybrandorigin
-    |SortedbybrandoriginAsc
+|Unsorted
+|Sortedbydes
+|Sortedbyasce
+|Sortedbybrandorigin
+|SortedbybrandoriginAsc
 
 type Car = {
     id                 : System.Guid
@@ -48,8 +47,6 @@ type Car = {
 }
 
 
-
-
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
@@ -57,9 +54,9 @@ type Car = {
 type Model = {
     rawData             : option<string>
     cars                : list<Car>
-    attributes          : list<String>
-    footer              : list<String>
-    attributes2         : list<String>
+    attributes          : list<string>
+    footer              : list<string>
+    attributes2         : list<string>
     groupedCarsbybrandbyorigin : list<Origin * list<string * list<Car>>>
     groupedCarsbybrand        : list<string * list<Car>>
     rangeMpg            : Domain
@@ -114,9 +111,6 @@ module Car =
 
 module Model =
 
-
-
-
     let initialModel =
         {
             rawData = None
@@ -170,12 +164,9 @@ module Model =
             sortmode = Unsorted
         }
 
-
-    let CreateOriginLookup (cars : list<Car>) : (Map<string, Origin>)=
+    let createOriginLookup (cars : list<Car>) : (Map<string, Origin>)=
         let gCars = cars |> List.groupBy (fun x -> x.brand)
         let flookupt = gCars |> List.map (fun (a,b) -> a, b.Head.origin)
-
-
         flookupt |> Map.ofList
 
-    let originLookup = CreateOriginLookup
+    let originLookup() = createOriginLookup

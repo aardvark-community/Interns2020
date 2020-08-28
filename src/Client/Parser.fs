@@ -1,13 +1,9 @@
-namespace Cars
+namespace Client
 
 open System
-open Cars
 
 module Parser =
-
-    let num = 235.215
-    let num1 = 0.7457
-
+    
     let parseOrigin (origin : float) : Origin =
         match origin with
         |1.0 -> Origin.USA
@@ -35,17 +31,12 @@ module Parser =
         |  _ -> d |> Double.Parse
 
     let parseRow i (row : string) : Car =
-
-        printfn "splitting row"
-        printfn "%d %A" i row
+                
         let attr = row.Split(',')
-
         let carName = attr.[0].Trim()
 
         let index = carName.IndexOf(' ')
-
         let brand = carName.Substring(0, index)
-
         let name = carName.Substring(index)
 
         let output = {
@@ -53,11 +44,11 @@ module Parser =
             brand              = brand
             name               = name
             mpg                = attr.[1] |> tryParse
-            lphundertkm        = num / (attr.[1] |> tryParse)
+            lphundertkm        = 235.215 / (attr.[1] |> tryParse)
             cylinders          = attr.[2] |> tryParse
             engineDisplacement = attr.[3] |> tryParse
             horsepower         = attr.[4] |> tryParse //int
-            kw                 = num1 * (attr.[4] |> tryParse)
+            kw                 = 0.7457 * (attr.[4] |> tryParse)
             weight             = attr.[5] |> tryParse
             acceleration       = attr.[6] |> tryParse
             modelYear          = attr.[7] |> tryParse //int
@@ -82,3 +73,5 @@ module Parser =
                 cars
                 |> List.filter(isValid)
             carsFiltered, newHeader
+
+    

@@ -10,6 +10,7 @@
     <Compile Include="Version.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="Data.fs" />
     <Compile Include="Visualization.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>
