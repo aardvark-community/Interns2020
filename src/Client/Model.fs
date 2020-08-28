@@ -1,6 +1,22 @@
 namespace Cars
 
 open System
+open Shared
+
+type Vec2i =
+    {
+        x : int
+        y : int
+    }
+
+module Vec2i =
+    let create x y = { x = x ; y = y }
+    let (+) l r = { x = l.x + r.x; y = l.y + r.y }
+    let blurg() =
+        let a = create 5 2
+        let b = create 2 4
+
+        a + b
 
 type Origin =
 | USA
@@ -31,11 +47,6 @@ type Car = {
     origin             : Origin
 }
 
-type Domain = {
-    minimum : float
-    maximum : float
-    size    : float
-}
 
 
 

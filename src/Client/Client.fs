@@ -14,6 +14,7 @@ open System
 
 open Cars
 
+
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
 type Msg =
@@ -70,17 +71,13 @@ let sortedCarsByBrandAndOrigin cars sortMode =
         sortedCars
     | _ -> []
 
-
-
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
 // these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.rawData, msg with
     | _, SelectCars (t,x,y) ->
-        { currentModel with hoveredItems = t; positionX = x; positionY = y; }, Cmd.none
-       // { currentModel with  = i }, Cmd.none
-       // { currentModel with positionY = s }, Cmd.none
+        { currentModel with hoveredItems = t; positionX = x; positionY = y; }, Cmd.none       
     | _, Deselect ->
         { currentModel with hoveredItems = Set.empty}, Cmd.none
     | Some data, LoadCsv ->
@@ -94,35 +91,16 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
             let x,y = List.splitAt 7 tv
             x @ ["KW"] @ y
-
-
+      
         let rangeMpg =
-            let mpg = cars |> List.map (fun car -> car.mpg)
-            let range = {
-                minimum = (mpg |> List.min)//  - float 1
-                maximum = (mpg |> List.max)//  + float 1
-                size = (mpg |> List.max) - (mpg |> List.min)
-            }
-            range
-
-        let rangeHp =
-            let horsepower = cars |> List.map (fun car -> car.horsepower)
-            let range = {
-                minimum = (horsepower |> List.min)//  - float 1
-                maximum = (horsepower |> List.max)//  + float 1
-                size = (horsepower |> List.max) - (horsepower |> List.min)
-            }
-            range
-
+            cars |> computeRange (fun car -> car.mpg)
         let rangelphundertkm =
-            let lphundertkm = cars |> List.map (fun car -> car.lphundertkm)
-            let range = {
-                minimum = (lphundertkm |> List.min)//  - float 1
-                maximum = (lphundertkm |> List.max)//  + float 1
-                size = (lphundertkm |> List.max) - (lphundertkm |> List.min)
-            }
-            range
-
+            cars |> computeRange (fun car -> car.lphundertkm)
+        let rangeHp =
+            cars |> computeRange (fun car -> car.horsepower)
+        let rangeCy =
+            cars |> computeRange (fun car -> car.cylinders)
+       
         let originLookup = Model.CreateOriginLookup(cars)
         let currentModel =
             {
@@ -134,28 +112,9 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     rangeMpg            = rangeMpg
                     rangeLphundertkm    = rangelphundertkm
                     rangeHp             = rangeHp
+                    rangeCy             = rangeCy
                     originLookup        = originLookup
-            }
-
-       // currentModel, Cmd.none
-
-        // let rangeCy =
-        //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
-        //    let range = {
-        //        minimum = (cylinders |> List.min)//  - float 1
-        //        maximum = (cylinders |> List.max)//  + float 1
-        //        size = (cylinders |> List.max) - (cylinders |> List.min)
-        //    }
-        //    range
-
-        // let rangeEd =
-        //    let cylinders = newCars |> List.map (fun car -> car.cylinders)
-        //    let range = {
-        //        minimum = (cylinders |> List.min)//  - float 1
-        //        maximum = (cylinders |> List.max)//  + float 1
-        //        size = (cylinders |> List.max) - (cylinders |> List.min)
-        //    }
-        //    range
+            }   
 
         let avgCar = Cars.Visualization.calcAverageCars(cars)
 
@@ -166,22 +125,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                     footer = foot;
                    }
         asdf, Cmd.none
-
-
-        // let m = {
-        //    currentModel with
-        //        cars = cars;
-        //        attributes = newHead;
-        //        footer = foot;
-        //        attributes2 = head2;
-        //        groupedCars = groupedCars;
-        //        rangeMpg = rangeMpg;
-        //        rangeHp = rangeHp;
-        //        rangeCy = rangeCy;
-        //        rangeEd = rangeEd;
-        // }
-        // m, Cmd.none
-
+       
     | Some counter, ChangeSorting ->
         let updatetSortmode =
             match currentModel.sortmode with
@@ -202,7 +146,6 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         printf "%s" data
         nextModel, Cmd.none
     | _ -> currentModel, Cmd.none
-
 
 let safeComponents =
     let components =
@@ -271,8 +214,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
             // let cy = 50
             let width = 2000
 
-            let rangeMpg = model.rangeMpg
-            let rangeHp = model.rangeHp
             let rangeLphundertkm = model.rangeLphundertkm
 
             // let isHovered (car : Car) =
@@ -291,44 +232,72 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 isHovered, isPartly
 
 
-            let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
-                model.cars
-                |> List.map (fun car ->
-                    Cars.Visualization.circle
-                        car
-                        (fun car -> car.mpg)
-                        (rangeX)
-                        (fun car -> car.horsepower)
-                        (rangeY)
-                        540
-                        500
-                        0.0
-                        (isHovered car)
-                        (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
-                )
+            //let circles (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
+            //    model.cars
+            //    |> List.map (fun car ->
+            //        Cars.Visualization.circle
+            //            car
+            //            (fun car -> car.mpg)
+            //            (rangeX)
+            //            (fun car -> car.horsepower)
+            //            (rangeY)
+            //            540
+            //            500
+            //            0.0
+            //            (isHovered car)
+            //            (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
+            //    )
+            
+            let getCarCol car = 
+                match car.origin with
+                | USA    -> "#1f78b4"
+                | Europe -> "#33a02c"
+                | Asia   -> "#e31a1c"
+                |  _     -> "#ffc800"
 
-            let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
-                model.cars
-                |> List.map (fun car ->
-                    Cars.Visualization.circle
-                        car
-                        (fun car -> car.lphundertkm)
-                        (rangeX)
-                        (fun car -> car.horsepower)
-                        (rangeY)
-                        540
-                        500
-                        580.0
-                        (isHovered car)
-                        (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
-                )
+            let dim = (Vec2i.create 520 500)
 
-            let tryMax xs =
-              if Seq.isEmpty xs
-              then
-                None
-              else
-                Seq.max xs |> Some
+            let circlesMpgHp =
+                Visualization.ScatterPlot.drawCircles
+                    dim
+                    model.rangeCy
+                    model.rangeHp
+                    (fun (car : Car) -> car.cylinders)
+                    (fun (car : Car) -> car.horsepower)
+                    getCarCol
+                    isHovered
+                    (fun car evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
+                    model.cars
+
+            let circlesLpHp =
+                Visualization.ScatterPlot.drawCircles
+                    dim
+                    model.rangeLphundertkm
+                    model.rangeHp
+                    (fun (car : Car) -> car.lphundertkm)
+                    (fun (car : Car) -> car.horsepower)
+                    getCarCol
+                    isHovered
+                    (fun car evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
+                    model.cars
+
+            //let circles1 (rangeX : Domain) (rangeY : Domain) : list<ReactElement> =
+            //    model.cars
+            //    |> List.map (fun car ->
+            //        Cars.Visualization.circle
+            //            car
+            //            (fun car -> car.lphundertkm)
+            //            (rangeX)
+            //            (fun car -> car.horsepower)
+            //            (rangeY)
+            //            540
+            //            500
+            //            580.0
+            //            (isHovered car)
+            //            (fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
+            //    )
+
+            
 
             let rects =
                 match model.sortmode with
@@ -358,7 +327,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 (fun evt -> dispatch (SelectCars (Set.ofList hovered,(evt.pageX |> int),(evt.pageY |> int))))
                             )
                 | _ ->
-
                     let ncount = model.groupedCarsbybrandbyorigin |> List.map (fun (o, brandGroups) ->
 
                         let brandHisto = brandGroups |> List.map(fun (a,b)  -> (b.Length))
@@ -385,43 +353,19 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 (isHoveredRect cars)
                                 origin
                                 (fun evt -> dispatch (SelectCars (Set.ofList hovered,(evt.pageX |> int),(evt.pageY |> int))))
-                            )
-
-            // let rects =
-            //     let count = cars |> List.map (List.length)
-            //     let max = count |> tryMax
-            //     match max with
-            //     |None -> []
-            //     | _ ->
-            //         let newMax = count |> List.max
-            //         model.groupedCars
-            //         |> List.mapi (fun i (brand,cars) ->
-            //             let hovered = carsi |> List.map (fun car -> car.id)
-            //             let origin = model.originLookup |> Map.find brand
-            //             Cars.Visualization.rect
-            //                 cars
-            //                 (List.length count)
-            //                 newMax
-            //                 i
-            //                 1080
-            //                 500
-            //                 500
-            //                 (isHoveredRect cars)
-            //                 origin
-            //                 (fun _ -> dispatch (SelectCars (Set.ofList hovered)))
-            //             )
+                            )           
 
             let lineX = line[X1 25; Y1 500; X2 525; Y2 500; Style [Stroke "black"]] []
             let lineY = line[X1 25; Y1 500; X2 25; Y2 0; Style [Stroke "black"]] []
 
-            let circleLine = lineX :: circles rangeMpg rangeHp
-            let fcircleLine = lineY :: circleLine
+            let circleLine = g [] circlesMpgHp
+            let fcircleLine = g [SVGAttr.Transform "translate(525 0) scale (1 1)" ] circlesLpHp
 
             let lineX1 = line[X1 580; Y1 500; X2 1080; Y2 500; Style [Stroke "black"]] []
             let lineY1 = line[X1 580; Y1 500; X2 580; Y2 0; Style [Stroke "black"]] []
 
-            let circleLine1 = lineX1 :: circles1 rangeLphundertkm rangeHp
-            let fcircleLine1 = lineY1 :: circleLine1
+            //let circleLine1 = lineX1 :: circlesLpHp
+            //let fcircleLine1 = lineY1 :: circleLine1
 
             //let x = 1200
             //let y = 50
@@ -460,7 +404,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     circle [Cx (x-20); Cy (y+250); R "20"; SVGAttr.FillOpacity 0.8; SVGAttr.Fill "#888888"; OnMouseOver  (fun evt -> dispatch (SelectCars (Set.empty,(evt.pageX |> int),(evt.pageY |> int))))][]
                 ]
 
-            let svgContent = [fcircleLine;fcircleLine1;rects;textLegende; textScatterplot] |> List.concat
+            let svgContent = [[lineX];[lineY];[circleLine;fcircleLine];[lineX1];[lineY1];rects;textLegende; textScatterplot] |> List.concat
 
             Container.container [] [
                 svg [SVGAttr.Width width; SVGAttr.Height height] svgContent
@@ -471,17 +415,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
                 Columns.columns []
                     [ Column.column [] [ button (sprintf "Sort (%A)" (model.sortmode.ToString())) (fun _ -> dispatch ChangeSorting) ]
-                      Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ] ]
-
-                let header2 =
-                    model.attributes2
-                    |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-
-                //let carNames =
-                    //model.cars
-                     //|> List.filter (fun c -> c.name.StartsWith("a"))
-                    // |> List.sortBy (fun car -> car.name)
-                    // |> List.map (fun car -> li[][str car.name])
+                      Column.column [] [ button "LoadCsv" (fun _ -> dispatch LoadCsv) ]
+                    ]                           
 
                 let footer =
                     model.footer
@@ -489,19 +424,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
                 let header =
                     model.attributes
-                    |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])
-
-                // let carToUl (l : list<Car>) : ReactElement =
-                //     let l2 = l |> List.map (fun car -> li [] [str car.name])
-                //     td [Style [Padding "10px"; Color "#585858"]] [ul [] l2]
-
-                // let cars2 =
-                //     model.groupedCars
-                //     |> List.map (carToUl)
-
-                // let stringifiedCars =
-                //     model.cars
-                //     |> List.map(Cars.Car.stringify)
+                    |> List.map (fun k -> th[Style [Padding "10px"; Color "#585858"]][str k])                
 
                 let tableRows =
                     model.cars
@@ -518,18 +441,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     tfoot [] [
                         tr [] footer
                     ]
-                ]
-
-
-                // table [] [
-                //     thead [] [
-                //         tr [] header2
-                //     ]
-                //     tbody [] [
-                //         tr [] cars2
-                //     ]
-                // ]
-                // ul [] carNames
+                ]           
             ]
 
             Footer.footer [] [

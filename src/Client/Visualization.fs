@@ -4,6 +4,7 @@ open Fable.React
 open Fable.React.Props
 open Model
 open Cars
+open Shared
 
 module Visualization =
 
@@ -48,24 +49,55 @@ module Visualization =
 
         avgCar
 
-
-    let circle (car: Car) (x : Car -> float) (rangeX : Domain) (y : Cars.Car -> float) (rangeY : Domain) width height offsetX isHovered (dispatch) : ReactElement =
-        let offset = 25.0
-        let cx = (((x car - rangeX.minimum) / rangeX.size) * (float width)) + offsetX + offset
-        let cy = ((y car - rangeY.minimum) / rangeY.size) * (float height)
+    let circle (c : Vec2i) r col isHovered onhover : ReactElement =
 
         let strokeStyle =
-
             if isHovered then
                 SVGAttr.StrokeWidth "2"
             else
                 SVGAttr.StrokeWidth "0"
+        circle [Cx c.x; Cy c.y; R r; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill col; OnMouseOver onhover][]
 
-        match car.origin with
-        | USA    -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#1f78b4"; OnMouseOver   dispatch][]
-        | Europe -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#33a02c"; OnMouseOver  dispatch][]
-        | Asia   -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#e31a1c"; OnMouseOver    dispatch][]
-        |  _     -> circle [Cx cx; Cy (float height-cy); R "4"; SVGAttr.Stroke "black"; strokeStyle; SVGAttr.FillOpacity 0.4; SVGAttr.Fill "#ffc800"; OnMouseOver dispatch][]
+
+    let dataCircle
+        (a : 'a)
+        (x : 'a -> float)
+        (rangeX : Domain)
+        (y : 'a -> float)
+        (rangeY : Domain)
+        (col : 'a -> string)
+        (size : Vec2i)
+        offsetX
+        isHovered onhover =
+        
+        let cx = int <| (((x a - rangeX.minimum) / rangeX.size) * (float size.x))
+        let cy = int <| (((y a - rangeY.minimum) / rangeY.size) * (float size.y))
+        let cy = size.y - cy
+
+        let c = Vec2i.create cx cy
+        let col = col a
+
+        circle c "4" col isHovered onhover
+
+
+    module ScatterPlot =
+        let drawCircles dim (rangeX : Domain) (rangeY : Domain) getX getY getCol isHovered onHover data : list<ReactElement> =
+            data
+            |> List.map (fun d ->
+                dataCircle
+                    d
+                    getX
+                    rangeX
+                    getY
+                    rangeY
+                    getCol
+                    dim
+                    0.0
+                    (isHovered d)
+                    (onHover d)//(fun evt -> dispatch (SelectCars (Set.ofList[car.id],(evt.pageX |> int),(evt.pageY |> int))))
+            )
+
+
 
     let rect (input : list<Car>) (count : int) (max : int) (index : int) (width : int) (height : int) (offsetY : int) (isHovered : bool * bool) (origin : Origin) (dispatch) : ReactElement =
 
@@ -95,9 +127,6 @@ module Visualization =
 
 
         rect ([X offset; Y ((height-y) + offsetY); SVGAttr.Width x; SVGAttr.Height y; OnMouseOver dispatch] @ rectStyle) []
-
-
-
 
     let carToRow i (c : list<string>) isHovered (dispatch : Browser.Types.MouseEvent -> unit) : ReactElement =
         let tds =
@@ -168,8 +197,6 @@ module Visualization =
             let count = hoverdCars |> Set.count |> float
 
             table[ Style [ Top model.positionY; Left model.positionX;]] ([creatDetailNumeric "Anzahl" count 1]@(createDetailcontent avgCar true))
-
-
 
     //let circles (input : list<Car>) : list<ReactElement> = failwith ""
 
